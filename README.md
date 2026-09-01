@@ -11,11 +11,11 @@ Portable Compression is a skills-only plugin for ChatGPT Work and Codex. It crea
 - Avoid overwriting existing outputs unless explicitly authorized.
 - Produce a SHA-256 digest and machine-readable result for every archive.
 
-Version 0.1 creates archives only. It does not extract archives, encrypt archives, accept URLs, or provide an unattended service.
+Version 0.2 creates archives only. It does not extract archives, encrypt archives, accept URLs, or provide an unattended service.
 
 ## Development time
 
-Version 0.1.1 was completed approximately 50 minutes after development began on September 1, 2026 at 12:39 PM EDT. Approximately 21 minutes were spent waiting on AI. Both figures are cumulative from the beginning of the project and intentionally approximate.
+Version 0.2.0 was completed approximately 2 hours and 35 minutes after development began on September 1, 2026 at 12:39 PM EDT. Approximately 25 minutes were spent waiting on AI. Both figures are cumulative from the beginning of the project and intentionally approximate.
 
 The project clock measures elapsed wall-clock time from the original start through each Git version. The AI-waiting clock accumulates the interval from receipt of each user prompt through release of the complete response. See `development-time.json` for the tracking basis used by later versions.
 
@@ -29,6 +29,16 @@ node scripts/compress.cjs \
 ```
 
 Use multiple `--input` arguments to add multiple roots. Use `--format zip` for ZIP output. Existing outputs are protected unless `--force` is supplied.
+
+## Install for testing
+
+Add this repository as a plugin marketplace:
+
+```sh
+codex plugin marketplace add jaireaux/portable-compression
+```
+
+Then restart the ChatGPT desktop app, open the Plugins Directory, select **Rollerfeet Plugins**, and install **Portable Compression**. Start a new Work or Codex conversation for each test. Mobile availability and execution must be verified separately after desktop installation.
 
 ## Test
 
