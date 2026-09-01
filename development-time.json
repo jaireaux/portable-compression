@@ -1,0 +1,29 @@
+{
+  "project_started_at": "2026-09-01T12:39:00-04:00",
+  "method": {
+    "project_time": "Cumulative wall-clock time from project start through the Git version.",
+    "ai_waiting_time": "Cumulative prompt-receipt-to-complete-response intervals.",
+    "precision": "Approximate; final response delivery may trail the recorded release timestamp by a few seconds."
+  },
+  "baseline": {
+    "through_version": "0.1.0",
+    "ai_waiting_seconds": 1200,
+    "source": "Johnny's estimate for the morning of 2026-09-01"
+  },
+  "measured_turns": [
+    {
+      "prompt_received_at": "2026-09-01T17:28:33Z",
+      "response_released_at_approx": "2026-09-01T17:29:20Z",
+      "duration_seconds": 47,
+      "included_through_version": "0.1.1"
+    }
+  ],
+  "versions": [
+    {
+      "version": "0.1.1",
+      "recorded_at_approx": "2026-09-01T17:29:20Z",
+      "project_elapsed_seconds": 3020,
+      "cumulative_ai_waiting_seconds": 1247
+    }
+  ]
+}
