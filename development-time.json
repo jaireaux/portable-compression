@@ -30,8 +30,8 @@
       "included_through_version": "0.2.0"
     }
   ],
-  "estimated_unmeasured_ai_waiting_seconds": 120,
-  "current_cumulative_ai_waiting_seconds": 1494,
+  "estimated_unmeasured_ai_waiting_seconds": 1020,
+  "current_cumulative_ai_waiting_seconds": 2394,
   "versions": [
     {
       "version": "0.1.1",
@@ -44,6 +44,13 @@
       "recorded_at_approx": "2026-09-01T19:13:50Z",
       "project_elapsed_seconds": 9290,
       "cumulative_ai_waiting_seconds": 1494
+    },
+    {
+      "version": "0.2.1",
+      "recorded_at_approx": "2026-09-01T23:35:22Z",
+      "project_elapsed_seconds": 24982,
+      "project_elapsed_human": "6 hours, 56 minutes, 22 seconds",
+      "cumulative_ai_waiting_seconds": 2394
     }
   ]
 }

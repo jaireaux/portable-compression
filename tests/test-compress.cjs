@@ -4,8 +4,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { builtinModules } = require('node:module');
 const { execFileSync, spawnSync } = require('node:child_process');
-const { gunzipSync, unzipSync } = require('../vendor/fflate/fflate.js');
+const { gunzipSync, inflateRawSync } = require('node:zlib');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'portable-compression-test-'));
 const input = path.join(root, 'sample');
@@ -36,7 +37,35 @@ function parseTar(buffer) {
   return files;
 }
 
+function parseZip(buffer) {
+  const files = new Map();
+  for (let offset = 0; offset + 30 <= buffer.length;) {
+    if (buffer.readUInt32LE(offset) !== 0x04034b50) break;
+    const flags = buffer.readUInt16LE(offset + 6);
+    assert.equal(flags & 0x08, 0, 'ZIP data descriptors are not expected');
+    const method = buffer.readUInt16LE(offset + 8);
+    const compressedSize = buffer.readUInt32LE(offset + 18);
+    const nameLength = buffer.readUInt16LE(offset + 26);
+    const extraLength = buffer.readUInt16LE(offset + 28);
+    const nameStart = offset + 30;
+    const dataStart = nameStart + nameLength + extraLength;
+    const name = buffer.subarray(nameStart, nameStart + nameLength).toString('utf8');
+    const compressed = buffer.subarray(dataStart, dataStart + compressedSize);
+    assert.ok(method === 0 || method === 8, `Unexpected ZIP compression method: ${method}`);
+    files.set(name, method === 8 ? inflateRawSync(compressed) : Buffer.from(compressed));
+    offset = dataStart + compressedSize;
+  }
+  return files;
+}
+
 try {
+  const helperSource = fs.readFileSync(helper, 'utf8');
+  const dependencies = [...helperSource.matchAll(/require\((['"])(.*?)\1\)/g)].map((match) => match[2]);
+  assert.ok(dependencies.every((dependency) => dependency.startsWith('node:') || builtinModules.includes(dependency)));
+  assert.ok(dependencies.every((dependency) => !dependency.startsWith('.') && !dependency.includes('fflate')));
+  assert.doesNotMatch(helperSource, /fflate\.js/);
+  assert.match(helperSource, /fflate 0\.8\.2/);
+
   const tgzPath = path.join(root, 'sample.tar.gz');
   const tgzResult = run('tar.gz', tgzPath);
   assert.equal(tgzResult.ok, true);
@@ -49,9 +78,9 @@ try {
   const zipResult = run('zip', zipPath);
   assert.equal(zipResult.ok, true);
   assert.equal(zipResult.file_count, 2);
-  const zipFiles = unzipSync(new Uint8Array(fs.readFileSync(zipPath)));
-  assert.equal(Buffer.from(zipFiles['sample/alpha.txt']).toString(), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
-  assert.equal(Buffer.from(zipFiles['sample/nested/beta.txt']).toString(), fs.readFileSync(path.join(input, 'nested', 'beta.txt'), 'utf8'));
+  const zipFiles = parseZip(fs.readFileSync(zipPath));
+  assert.equal(zipFiles.get('sample/alpha.txt').toString(), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
+  assert.equal(zipFiles.get('sample/nested/beta.txt').toString(), fs.readFileSync(path.join(input, 'nested', 'beta.txt'), 'utf8'));
 
   const secondZipPath = path.join(root, 'sample-second.zip');
   run('zip', secondZipPath);
@@ -64,6 +93,10 @@ try {
   const secondTgzPath = path.join(root, 'sample-second.tar.gz');
   run('tar.gz', secondTgzPath);
   assert.deepEqual(fs.readFileSync(secondTgzPath), fs.readFileSync(tgzPath));
+
+  const edtTgzPath = path.join(root, 'sample-edt.tar.gz');
+  run('tar.gz', edtTgzPath, { ...process.env, TZ: 'America/New_York' });
+  assert.deepEqual(fs.readFileSync(edtTgzPath), fs.readFileSync(tgzPath));
 
   const overwrite = spawnSync(process.execPath, [helper, '--format', 'zip', '--output', zipPath, '--input', input], { encoding: 'utf8' });
   assert.notEqual(overwrite.status, 0);
