@@ -1,0 +1,21 @@
+{
+  "name": "portable-compression",
+  "version": "0.1.0",
+  "description": "Create deterministic ZIP and TAR.GZ archives with bundled, OS-independent compression code.",
+  "author": {
+    "name": "Johnny Rollerfeet"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/jaireaux/portable-compression",
+  "keywords": ["compression", "archive", "zip", "tar", "gzip", "portable"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Portable Compression",
+    "shortDescription": "Create ZIP and TAR.GZ files without OS utilities.",
+    "longDescription": "Portable Compression creates deterministic ZIP and TAR.GZ archives using compression code bundled with the plugin. It does not require an MCP server, network service, or operating-system archive utility.",
+    "developerName": "Johnny Rollerfeet",
+    "category": "Productivity",
+    "capabilities": ["Create ZIP archives", "Create TAR.GZ archives", "Deterministic output"],
+    "defaultPrompt": "Compress my selected files into a portable archive."
+  }
+}
