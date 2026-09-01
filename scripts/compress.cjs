@@ -150,7 +150,10 @@ function makeZip(entries, level) {
     if (entry.type === 'file') {
       files[entry.archivePath] = [
         new Uint8Array(fs.readFileSync(entry.sourcePath)),
-        { mtime: new Date('1980-01-01T00:00:00.000Z') },
+        // fflate writes ZIP's timezone-free DOS date from local calendar
+        // fields. Construct the epoch in local time so every timezone emits
+        // the same valid 1980-01-01 timestamp.
+        { mtime: new Date(1980, 0, 1, 0, 0, 0) },
       ];
     }
   }

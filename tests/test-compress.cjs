@@ -15,8 +15,8 @@ fs.writeFileSync(path.join(input, 'nested', 'beta.txt'), 'alpha beta delta\n'.re
 
 const helper = path.resolve(__dirname, '../scripts/compress.cjs');
 
-function run(format, output) {
-  const stdout = execFileSync(process.execPath, [helper, '--format', format, '--output', output, '--input', input], { encoding: 'utf8' });
+function run(format, output, env = process.env) {
+  const stdout = execFileSync(process.execPath, [helper, '--format', format, '--output', output, '--input', input], { encoding: 'utf8', env });
   return JSON.parse(stdout);
 }
 
@@ -56,6 +56,10 @@ try {
   const secondZipPath = path.join(root, 'sample-second.zip');
   run('zip', secondZipPath);
   assert.deepEqual(fs.readFileSync(secondZipPath), fs.readFileSync(zipPath));
+
+  const edtZipPath = path.join(root, 'sample-edt.zip');
+  run('zip', edtZipPath, { ...process.env, TZ: 'America/New_York' });
+  assert.deepEqual(fs.readFileSync(edtZipPath), fs.readFileSync(zipPath));
 
   const secondTgzPath = path.join(root, 'sample-second.tar.gz');
   run('tar.gz', secondTgzPath);
