@@ -5,10 +5,12 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { builtinModules } = require('node:module');
+const crypto = require('node:crypto');
+const vm = require('node:vm');
 const { execFileSync, spawnSync } = require('node:child_process');
 const { gunzipSync, inflateRawSync } = require('node:zlib');
 
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'portable-compression-test-'));
+const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'portable-compression-test-'));
 const input = path.join(root, 'sample');
 fs.mkdirSync(path.join(input, 'nested'), { recursive: true });
 fs.writeFileSync(path.join(input, 'alpha.txt'), 'alpha beta gamma\n'.repeat(200));
@@ -19,6 +21,59 @@ const helper = path.resolve(__dirname, '../scripts/compress.cjs');
 function run(format, output, env = process.env) {
   const stdout = execFileSync(process.execPath, [helper, '--format', format, '--output', output, '--input', input], { encoding: 'utf8', env });
   return JSON.parse(stdout);
+}
+
+function invoke(args, executable = helper, env = process.env) {
+  return spawnSync(process.execPath, [executable, ...args], { encoding: 'utf8', env });
+}
+
+function argsFor(format, output, inputs = [input]) {
+  return ['--format', format, '--output', output, ...inputs.flatMap((file) => ['--input', file])];
+}
+
+function expectFailure(args, message) {
+  const result = invoke(args);
+  assert.notEqual(result.status, 0);
+  assert.equal(result.stdout, '');
+  const error = JSON.parse(result.stderr);
+  assert.equal(error.ok, false);
+  assert.match(error.error, message);
+}
+
+function verifyReport(result, output, count = 2) {
+  assert.deepEqual(Object.keys(result).sort(), ['ok', 'format', 'output', 'input_bytes', 'archive_bytes', 'file_count', 'sha256'].sort());
+  assert.equal(result.ok, true);
+  assert.equal(result.output, output);
+  assert.equal(result.file_count, count);
+  const bytes = fs.readFileSync(output);
+  assert.equal(result.archive_bytes, bytes.length);
+  assert.equal(result.sha256, crypto.createHash('sha256').update(bytes).digest('hex'));
+  assert.equal(result.input_bytes, 6800);
+}
+
+// Fault injection stays inside this test process; there are no test hooks in
+// the shipped CLI and no extra runtime files/packages available to the helper.
+function faultRun(args, overrides, source = fs.readFileSync(helper, 'utf8')) {
+  const sandboxFs = Object.assign(Object.create(fs), overrides);
+  let stdout = '';
+  let stderr = '';
+  const testProcess = {
+    argv: [process.execPath, helper, ...args], pid: process.pid,
+    stdout: { write: (value) => { stdout += value; } },
+    stderr: { write: (value) => { stderr += value; } },
+  };
+  vm.runInNewContext(source, {
+    Buffer, process: testProcess,
+    require: (name) => {
+      assert.ok(['node:fs', 'node:path', 'node:crypto', 'worker_threads'].includes(name));
+      return name === 'node:fs' ? sandboxFs : require(name);
+    },
+  });
+  assert.equal(testProcess.exitCode, 1);
+  assert.equal(stdout, '');
+  const error = JSON.parse(stderr);
+  assert.equal(error.ok, false);
+  return error.error;
 }
 
 function parseTar(buffer) {
@@ -66,10 +121,61 @@ try {
   assert.doesNotMatch(helperSource, /fflate\.js/);
   assert.match(helperSource, /fflate 0\.8\.2/);
 
+  // Copy just one JS file into an otherwise empty package and remove PATH.
+  // Both formats must create and verify their output in one process.
+  const standalone = path.join(root, 'standalone');
+  fs.mkdirSync(standalone);
+  const standaloneHelper = path.join(standalone, 'compress.cjs');
+  fs.copyFileSync(helper, standaloneHelper);
+  for (const format of ['zip', 'tar.gz']) {
+    const base = path.join(root, `single-${format}`);
+    fs.mkdirSync(base);
+    const output = path.join(base, 'outputs', `archive.${format}`);
+    const result = invoke(argsFor(format, output), standaloneHelper, { ...process.env, PATH: '', NODE_PATH: '' });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const report = JSON.parse(result.stdout);
+    verifyReport(report, output);
+    const repeat = path.join(base, 'outputs', `repeat.${format}`);
+    const repeatResult = invoke(argsFor(format, repeat), standaloneHelper, { ...process.env, PATH: '', NODE_PATH: '' });
+    assert.equal(repeatResult.status, 0, repeatResult.stderr);
+    assert.deepEqual(fs.readFileSync(output), fs.readFileSync(repeat));
+    assert.deepEqual(fs.readdirSync(standalone), ['compress.cjs']);
+    assert.ok(fs.readdirSync(path.dirname(output)).every((name) => !name.includes('.tmp-')));
+  }
+
+  // Execute the actual documented shell command with a supplied runtime,
+  // including spaces in the runtime path and no executable utilities on PATH.
+  if (process.platform !== 'win32') {
+    const skill = fs.readFileSync(path.resolve(__dirname, '../skills/compress-files/SKILL.md'), 'utf8');
+    const command = skill.match(/```sh\n([\s\S]*?)\n```/)[1];
+    const shellBase = path.join(root, 'documented');
+    fs.mkdirSync(shellBase);
+    const runtimeLink = path.join(root, 'bundled node');
+    fs.symlinkSync(process.execPath, runtimeLink);
+    const output = path.join(shellBase, 'outputs', 'archive.tar.gz');
+    const executableCommand = command
+      .replace('<skill-directory>/../../scripts/compress.cjs', standaloneHelper)
+      .replace('/absolute/path/to/outputs/archive.tar.gz', JSON.stringify(output))
+      .replace('/absolute/path/to/file-or-directory', JSON.stringify(input));
+    const shellResult = spawnSync('/bin/sh', ['-c', executableCommand], {
+      encoding: 'utf8', env: { ...process.env, CODEX_PRIMARY_RUNTIME_NODE: runtimeLink, PATH: '', NODE_PATH: '' },
+    });
+    assert.equal(shellResult.status, 0, shellResult.stderr);
+    verifyReport(JSON.parse(shellResult.stdout), output);
+    const fallbackEnv = { ...process.env, PATH: path.dirname(process.execPath) };
+    delete fallbackEnv.CODEX_PRIMARY_RUNTIME_NODE;
+    const fallbackOutput = path.join(shellBase, 'outputs', 'fallback.tar.gz');
+    const fallback = spawnSync('/bin/sh', ['-c', executableCommand.replace(JSON.stringify(output), JSON.stringify(fallbackOutput))], { encoding: 'utf8', env: fallbackEnv });
+    assert.equal(fallback.status, 0, fallback.stderr);
+    verifyReport(JSON.parse(fallback.stdout), fallbackOutput);
+  }
+
   const tgzPath = path.join(root, 'sample.tar.gz');
   const tgzResult = run('tar.gz', tgzPath);
   assert.equal(tgzResult.ok, true);
   assert.equal(tgzResult.file_count, 2);
+  verifyReport(tgzResult, tgzPath);
   const tarFiles = parseTar(Buffer.from(gunzipSync(new Uint8Array(fs.readFileSync(tgzPath)))));
   assert.equal(tarFiles.get('sample/alpha.txt').toString(), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
   assert.equal(tarFiles.get('sample/nested/beta.txt').toString(), fs.readFileSync(path.join(input, 'nested', 'beta.txt'), 'utf8'));
@@ -78,6 +184,7 @@ try {
   const zipResult = run('zip', zipPath);
   assert.equal(zipResult.ok, true);
   assert.equal(zipResult.file_count, 2);
+  verifyReport(zipResult, zipPath);
   const zipFiles = parseZip(fs.readFileSync(zipPath));
   assert.equal(zipFiles.get('sample/alpha.txt').toString(), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
   assert.equal(zipFiles.get('sample/nested/beta.txt').toString(), fs.readFileSync(path.join(input, 'nested', 'beta.txt'), 'utf8'));
@@ -87,7 +194,7 @@ try {
   assert.deepEqual(fs.readFileSync(secondZipPath), fs.readFileSync(zipPath));
 
   const edtZipPath = path.join(root, 'sample-edt.zip');
-  run('zip', edtZipPath, { ...process.env, TZ: 'America/New_York' });
+  run('zip', edtZipPath, { ...process.env, TZ: 'Pacific/Kiritimati' });
   assert.deepEqual(fs.readFileSync(edtZipPath), fs.readFileSync(zipPath));
 
   const secondTgzPath = path.join(root, 'sample-second.tar.gz');
@@ -95,14 +202,76 @@ try {
   assert.deepEqual(fs.readFileSync(secondTgzPath), fs.readFileSync(tgzPath));
 
   const edtTgzPath = path.join(root, 'sample-edt.tar.gz');
-  run('tar.gz', edtTgzPath, { ...process.env, TZ: 'America/New_York' });
+  run('tar.gz', edtTgzPath, { ...process.env, TZ: 'Pacific/Kiritimati' });
   assert.deepEqual(fs.readFileSync(edtTgzPath), fs.readFileSync(tgzPath));
 
   const overwrite = spawnSync(process.execPath, [helper, '--format', 'zip', '--output', zipPath, '--input', input], { encoding: 'utf8' });
   assert.notEqual(overwrite.status, 0);
   assert.match(overwrite.stderr, /already exists/);
 
+  const before = fs.readFileSync(zipPath);
+  expectFailure(argsFor('zip', zipPath), /already exists/);
+  assert.deepEqual(fs.readFileSync(zipPath), before);
+  const forced = invoke([...argsFor('zip', zipPath), '--force']);
+  assert.equal(forced.status, 0, forced.stderr);
+  assert.deepEqual(fs.readFileSync(zipPath), before);
+  expectFailure([...argsFor('zip', path.join(input, 'alpha.txt')), '--force'], /inside an input/);
+  expectFailure([...argsFor('zip', path.join(input, 'alpha.txt'), [path.join(input, 'alpha.txt')]), '--force'], /replace an input/);
+  expectFailure(argsFor('zip', path.join(root, 'missing-parent', 'outputs', 'x.zip')), /must already be a directory/);
+  assert.equal(fs.existsSync(path.join(root, 'missing-parent')), false);
+  expectFailure(argsFor('zip', path.join(root, 'arbitrary-new-directory', 'x.zip')), /Only an immediate outputs/);
+  assert.equal(fs.existsSync(path.join(root, 'arbitrary-new-directory')), false);
+  const badBase = path.join(root, 'bad-input');
+  fs.mkdirSync(badBase);
+  expectFailure(argsFor('zip', path.join(badBase, 'outputs', 'x.zip'), [path.join(root, 'missing-input')]), /Input does not exist/);
+  assert.equal(fs.existsSync(path.join(badBase, 'outputs')), false);
+  expectFailure([...argsFor('zip', standalone), '--force'], /not a regular file/);
+  expectFailure(argsFor('zip', path.join(input, 'outputs', 'nested.zip')), /inside an input/);
+  assert.equal(fs.existsSync(path.join(input, 'outputs')), false);
+
+  // Simulated write corruption must be caught internally before publication.
+  const corruptPath = path.join(root, 'corrupt.zip');
+  assert.match(faultRun(argsFor('zip', corruptPath), {
+    writeFileSync(target, bytes, options) {
+      const damaged = Buffer.from(bytes);
+      damaged[0] ^= 0xff;
+      fs.writeFileSync(target, damaged, options);
+    },
+  }), /Written archive integrity check failed/);
+  assert.equal(fs.existsSync(corruptPath), false);
+  assert.ok(fs.readdirSync(root).every((name) => !name.includes('.tmp-')));
+
+  for (const format of ['zip', 'tar.gz']) {
+    const source = helperSource.replace('const { gzipSync, zipSync, gunzipSync, unzipSync } = fflate;',
+      `fflate.unzipSync = () => ({}); fflate.gunzipSync = () => new Uint8Array(0);\nconst { gzipSync, zipSync, gunzipSync, unzipSync } = fflate;`);
+    const output = path.join(root, `roundtrip-bad.${format}`);
+    assert.match(faultRun(argsFor(format, output), {}, source), /integrity check failed/);
+    assert.equal(fs.existsSync(output), false);
+  }
+
+  // A destination appearing after collision validation must not be replaced.
+  const racePath = path.join(root, 'race.zip');
+  assert.match(faultRun(argsFor('zip', racePath), {
+    linkSync(source, destination) {
+      fs.writeFileSync(destination, 'concurrent file', { flag: 'wx' });
+      fs.linkSync(source, destination);
+    },
+  }), /EEXIST/);
+  assert.equal(fs.readFileSync(racePath, 'utf8'), 'concurrent file');
+  assert.ok(fs.readdirSync(root).every((name) => !name.includes('.tmp-')));
+
   if (process.platform !== 'win32') {
+    const linkedOutput = path.join(root, 'linked.zip');
+    fs.symlinkSync(zipPath, linkedOutput);
+    expectFailure([...argsFor('zip', linkedOutput), '--force'], /symbolic link/);
+    assert.deepEqual(fs.readFileSync(zipPath), before);
+    const dangling = path.join(root, 'dangling.zip');
+    fs.symlinkSync(path.join(root, 'absent-target'), dangling);
+    expectFailure([...argsFor('zip', dangling), '--force'], /symbolic link/);
+    const linkedDirectory = path.join(root, 'linked-directory');
+    fs.symlinkSync(standalone, linkedDirectory);
+    expectFailure(argsFor('zip', path.join(linkedDirectory, 'x.zip')), /symbolic link/);
+    expectFailure(argsFor('zip', path.join(linkedDirectory, 'outputs', 'x.zip')), /must already be a directory/);
     const linkPath = path.join(input, 'unsafe-link');
     fs.symlinkSync(path.join(input, 'alpha.txt'), linkPath);
     const rejected = spawnSync(process.execPath, [helper, '--format', 'tar.gz', '--output', path.join(root, 'unsafe.tar.gz'), '--input', input], { encoding: 'utf8' });

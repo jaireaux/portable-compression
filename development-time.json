@@ -28,10 +28,136 @@
       "response_released_at_approx": "2026-09-01T19:13:50Z",
       "duration_seconds": 59,
       "included_through_version": "0.2.0"
+    },
+    {
+      "id": "01a05f53-39ab-7311-afc5-994fbf92e68a",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:35:22Z",
+      "response_released_at_approx": "2026-09-01T23:36:27.586Z",
+      "duration_seconds": 66,
+      "included_through_version": "0.2.2",
+      "precision": "Post-v0.2.1 publication tail only; rounded to nearest second."
+    },
+    {
+      "id": "01a05f56-b438-7c72-bae5-4a76d37ba42e",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:38:32.893Z",
+      "response_released_at_approx": "2026-09-01T23:39:01.529Z",
+      "duration_seconds": 29,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f58-ed95-7aa1-904e-6ed4310a13a8",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:40:58.656Z",
+      "response_released_at_approx": "2026-09-01T23:41:04.159Z",
+      "duration_seconds": 6,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f59-91b4-75a2-9499-06b6ba1499dd",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:41:40.665Z",
+      "response_released_at_approx": "2026-09-01T23:42:10.114Z",
+      "duration_seconds": 29,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f5c-b80f-7482-b32b-d348af7effa3",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:45:07.092Z",
+      "response_released_at_approx": "2026-09-01T23:45:28.898Z",
+      "duration_seconds": 22,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f60-2868-76c3-8bcb-fb762ebe9540",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:48:52.462Z",
+      "response_released_at_approx": "2026-09-01T23:49:00.837Z",
+      "duration_seconds": 8,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f61-c1c3-7ce1-a460-ecb6007f60c2",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:50:37.267Z",
+      "response_released_at_approx": "2026-09-01T23:50:41.294Z",
+      "duration_seconds": 4,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f61-f42b-7b73-a85a-7b476baa84c9",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:50:50.160Z",
+      "response_released_at_approx": "2026-09-01T23:50:53.072Z",
+      "duration_seconds": 3,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f62-73d7-7771-9a0e-a61636e25b5e",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:51:22.844Z",
+      "response_released_at_approx": "2026-09-01T23:51:49.612Z",
+      "duration_seconds": 27,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a05f64-5909-7030-b071-75fc106a6cd9",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-01T23:53:27.054Z",
+      "response_released_at_approx": "2026-09-01T23:54:17.343Z",
+      "duration_seconds": 50,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a0628e-01bd-7372-a012-ad52cc11a95f",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-02T14:37:48.884Z",
+      "response_released_at_approx": "2026-09-02T14:42:44.621Z",
+      "duration_seconds": 296,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a06293-1a0e-7713-8bff-e0704d48e1fc",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-02T14:43:22.776Z",
+      "response_released_at_approx": "2026-09-02T14:43:27.244Z",
+      "duration_seconds": 4,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a06293-78d3-7c22-8dae-306a0988cd5a",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-02T14:43:47.034Z",
+      "response_released_at_approx": "2026-09-02T14:44:37.875Z",
+      "duration_seconds": 51,
+      "included_through_version": "0.2.2",
+      "precision": "Task start/completion approximate receipt/control return; rounded to nearest second."
+    },
+    {
+      "id": "01a06297-5774-7e21-b564-7d1de9b4bd50",
+      "source": "Mac development task event timestamps",
+      "prompt_received_at_approx": "2026-09-02T14:48:00.635Z",
+      "response_released_at_approx": "2026-09-02T14:48:40Z",
+      "duration_seconds": 39,
+      "included_through_version": "0.2.2",
+      "precision": "Active release turn through pre-commit cutoff only; carry its remaining delivery tail into the next version."
     }
   ],
-  "estimated_unmeasured_ai_waiting_seconds": 1020,
-  "current_cumulative_ai_waiting_seconds": 2394,
+  "estimated_unmeasured_ai_waiting_seconds": 1620,
+  "current_cumulative_ai_waiting_seconds": 3628,
   "versions": [
     {
       "version": "0.1.1",
@@ -51,6 +177,26 @@
       "project_elapsed_seconds": 24982,
       "project_elapsed_human": "6 hours, 56 minutes, 22 seconds",
       "cumulative_ai_waiting_seconds": 2394
+    },
+    {
+      "version": "0.2.2",
+      "recorded_at_approx": "2026-09-02T14:48:40Z",
+      "project_elapsed_seconds": 79780,
+      "project_elapsed_human": "22 hours, 9 minutes, 40 seconds",
+      "cumulative_ai_waiting_seconds": 3628,
+      "cumulative_ai_waiting_human": "1 hours, 0 minutes, 28 seconds",
+      "prior_cumulative_ai_waiting_seconds": 2394,
+      "additional_mac_ai_waiting_seconds": 634,
+      "additional_estimated_testing_ai_waiting_seconds": 600
+    }
+  ],
+  "estimated_adjustments": [
+    {
+      "id": "testing-post-v021-600",
+      "description": "Additional estimated AI-waiting from separate testing thread: 600 seconds",
+      "duration_seconds": 600,
+      "included_through_version": "0.2.2",
+      "source": "User-agreed approximation; exact per-response timestamps were not recoverable."
     }
   ]
 }
