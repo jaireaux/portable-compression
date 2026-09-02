@@ -1,7 +1,7 @@
 {
   "project_started_at": "2026-09-01T12:39:00-04:00",
   "method": {
-    "project_time": "Cumulative wall-clock time from project start through the Git version.",
+    "project_time": "Continuous wall-clock age from the original project start until retirement, reported through each Git version; not hands-on labor.",
     "ai_waiting_time": "Cumulative prompt-receipt-to-complete-response intervals.",
     "precision": "Approximate; final response delivery may trail the recorded release timestamp by a few seconds."
   },
@@ -156,8 +156,8 @@
       "precision": "Active release turn through pre-commit cutoff only; carry its remaining delivery tail into the next version."
     }
   ],
-  "estimated_unmeasured_ai_waiting_seconds": 1620,
-  "current_cumulative_ai_waiting_seconds": 3628,
+  "estimated_unmeasured_ai_waiting_seconds": 1800,
+  "current_cumulative_ai_waiting_seconds": 4514,
   "versions": [
     {
       "version": "0.1.1",
@@ -197,6 +197,290 @@
       "duration_seconds": 600,
       "included_through_version": "0.2.2",
       "source": "User-agreed approximation; exact per-response timestamps were not recoverable."
+    },
+    {
+      "id": "linux-v022-acceptance-180",
+      "description": "Additional estimated AI-waiting from Linux v0.2.2 acceptance testing: 180 seconds",
+      "duration_seconds": 180,
+      "included_in_checkpoint": "v0.2.2-acceptance-documentation",
+      "source": "User agreed on 2026-09-02 after SSH authentication prevented recovering Linux timestamps. Covers the shown Linux test responses, not the intervening development-thread reporting. Separate from the earlier 600-second estimate.",
+      "precision": "Estimated; exact placement and overlap cannot be independently reconstructed. Screenshots show completed tests before the corresponding development-thread reports."
     }
-  ]
+  ],
+  "documentation_checkpoints": [
+    {
+      "id": "v0.2.2-acceptance-documentation",
+      "plugin_version": "0.2.2",
+      "after_commit": "d988e811064cca1d440f286f1b6abd7b4d93faad",
+      "recorded_at_approx": "2026-09-02T19:26:34.000Z",
+      "project_elapsed_seconds": 96454,
+      "project_elapsed_human": "26:47:34",
+      "prior_cumulative_ai_waiting_seconds": 3628,
+      "additional_recovered_ai_waiting_milliseconds": 706224,
+      "additional_recovered_ai_waiting_seconds": 706,
+      "additional_estimated_linux_ai_waiting_seconds": 180,
+      "cumulative_ai_waiting_seconds": 4514,
+      "cumulative_ai_waiting_human": "1:15:14",
+      "method": "Clip user-task intervals at the prior cutoff, union overlaps, and round the union once to nearest second. Exclude internal reviewer/subagent tasks. Add agreed Linux estimate once. Prior release intervals and estimates remain unchanged. Active turn ends at this pre-commit checkpoint; its later tail belongs to the next checkpoint.",
+      "recovered_intervals": [
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06297-5774-7e21-b564-7d1de9b4bd50",
+          "start": "2026-09-02T14:48:40.000Z",
+          "end": "2026-09-02T14:50:02.153Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06299-8299-7ed3-b4e1-adb0db1749ba",
+          "start": "2026-09-02T14:50:22.751Z",
+          "end": "2026-09-02T14:51:51.667Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0629b-6008-7b40-a952-dda059f61ee3",
+          "start": "2026-09-02T14:52:24.989Z",
+          "end": "2026-09-02T14:52:28.936Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0629b-d56f-7333-80be-bbe259cf5e60",
+          "start": "2026-09-02T14:52:55.041Z",
+          "end": "2026-09-02T14:52:59.474Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0629c-4696-7740-84d8-ec8cc8ae9649",
+          "start": "2026-09-02T14:53:23.996Z",
+          "end": "2026-09-02T14:53:30.236Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0629d-c1c7-7f72-bfb7-b2dc9dddcf4e",
+          "start": "2026-09-02T14:55:01.069Z",
+          "end": "2026-09-02T14:55:07.224Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a062a2-11a2-7691-a4c4-553e022ed2ee",
+          "turn_id": "01a062a2-1343-75f2-a7bd-ebae0c95d423",
+          "start": "2026-09-02T14:59:44.119Z",
+          "end": "2026-09-02T15:00:08.359Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a4-3b26-74c2-9183-c7cdb1051277",
+          "start": "2026-09-02T15:02:05.370Z",
+          "end": "2026-09-02T15:02:08.281Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a4-f555-7522-b7dc-39a4f64a7d55",
+          "start": "2026-09-02T15:02:53.018Z",
+          "end": "2026-09-02T15:02:55.479Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a5-2318-79e3-a431-edbdeb8c3f67",
+          "start": "2026-09-02T15:03:04.747Z",
+          "end": "2026-09-02T15:03:07.494Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a5-9fde-72e1-9532-c8c1f62817b4",
+          "start": "2026-09-02T15:03:36.676Z",
+          "end": "2026-09-02T15:03:51.106Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a6-c90b-7bb0-893f-2d061de10982",
+          "start": "2026-09-02T15:04:52.769Z",
+          "end": "2026-09-02T15:04:56.713Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a062a7-bd28-7712-9013-4ecd32e83923",
+          "turn_id": "01a062a7-bef7-70d0-9b5d-8005a285ab67",
+          "start": "2026-09-02T15:05:55.755Z",
+          "end": "2026-09-02T15:06:24.274Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a8-e00e-7923-902c-5d508c02b011",
+          "start": "2026-09-02T15:07:09.717Z",
+          "end": "2026-09-02T15:07:20.655Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a062a9-51ab-7a03-81dc-46750c76a019",
+          "start": "2026-09-02T15:07:38.802Z",
+          "end": "2026-09-02T15:07:42.808Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06327-4861-7342-9ea3-777cebc7da80",
+          "start": "2026-09-02T17:25:13.983Z",
+          "end": "2026-09-02T17:25:20.491Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0632d-052d-7510-97a8-07dd05cedb4f",
+          "start": "2026-09-02T17:31:29.982Z",
+          "end": "2026-09-02T17:31:36.063Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0632f-0341-77c3-be0c-4b1ed97f35b8",
+          "start": "2026-09-02T17:33:40.557Z",
+          "end": "2026-09-02T17:33:48.572Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06331-1686-7240-97ad-92ee3944d260",
+          "start": "2026-09-02T17:35:56.559Z",
+          "end": "2026-09-02T17:36:01.984Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06331-da1c-7361-bbc6-9a3cca2a033d",
+          "start": "2026-09-02T17:36:46.625Z",
+          "end": "2026-09-02T17:37:09.727Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06332-e4b6-7290-939b-cae8fa136fbb",
+          "start": "2026-09-02T17:37:54.875Z",
+          "end": "2026-09-02T17:38:02.370Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a06333-6a16-7261-bf0f-302be9e9730a",
+          "turn_id": "01a06333-6bbd-7a53-888b-e567dc8e18a8",
+          "start": "2026-09-02T17:38:29.489Z",
+          "end": "2026-09-02T17:38:55.102Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06334-3adb-7851-a352-d47b659191fb",
+          "start": "2026-09-02T17:39:22.473Z",
+          "end": "2026-09-02T17:39:28.310Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06335-54aa-7ac3-87f5-8efe05101169",
+          "start": "2026-09-02T17:40:34.608Z",
+          "end": "2026-09-02T17:40:38.448Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06336-1746-7ff2-bb84-044ea2add6fa",
+          "start": "2026-09-02T17:41:24.427Z",
+          "end": "2026-09-02T17:41:28.204Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06336-9c51-7f73-939c-5be32665adc2",
+          "start": "2026-09-02T17:41:58.489Z",
+          "end": "2026-09-02T17:42:05.493Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a06339-7b1a-76f1-b030-8d3b324b6d06",
+          "turn_id": "01a06339-7cdb-7d30-be6c-e349515e105f",
+          "start": "2026-09-02T17:45:07.093Z",
+          "end": "2026-09-02T17:45:26.721Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a06339-7b1a-76f1-b030-8d3b324b6d06",
+          "turn_id": "01a0633a-84fb-7e83-9c78-405b6151a2cf",
+          "start": "2026-09-02T17:46:14.658Z",
+          "end": "2026-09-02T17:46:30.630Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0633b-5cb4-7640-8437-a0f4c1644772",
+          "start": "2026-09-02T17:47:09.887Z",
+          "end": "2026-09-02T17:47:17.612Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0633b-b5c3-7ec1-aacb-1a72173e294a",
+          "start": "2026-09-02T17:47:32.688Z",
+          "end": "2026-09-02T17:47:37.177Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0633c-86e1-7d70-ade1-1e92e439a366",
+          "start": "2026-09-02T17:48:26.217Z",
+          "end": "2026-09-02T17:48:42.609Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0633e-59be-7701-9aa2-9b0328fb6949",
+          "start": "2026-09-02T17:50:25.731Z",
+          "end": "2026-09-02T17:50:33.409Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a0633f-1954-7ab0-a03e-d2e0b8e73051",
+          "start": "2026-09-02T17:51:14.778Z",
+          "end": "2026-09-02T17:53:01.123Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06393-2464-7da1-8db4-311509183a4c",
+          "start": "2026-09-02T19:23:02.636Z",
+          "end": "2026-09-02T19:23:10.821Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06394-2c28-7583-9d21-8bc7893ea157",
+          "start": "2026-09-02T19:24:10.157Z",
+          "end": "2026-09-02T19:25:33.763Z",
+          "precision": "Task events approximate receipt/control return."
+        },
+        {
+          "task_id": "01a05f4a-1a99-7040-9725-9793087607ab",
+          "turn_id": "01a06395-a498-77e2-bb2a-e5bfcfedd630",
+          "start": "2026-09-02T19:25:46.533Z",
+          "end": "2026-09-02T19:26:34.000Z",
+          "precision": "Active turn clipped at pre-commit cutoff; carry remainder forward."
+        }
+      ]
+    }
+  ],
+  "continuation": {
+    "after_cutoff": "2026-09-02T19:26:34.000Z",
+    "prior_cumulative_ai_waiting_seconds": 4514,
+    "method": "Carry only later intervals and active-turn delivery tail into the next checkpoint; do not re-add the 600-second or 180-second estimates. Project age always starts at 2026-09-01T12:39:00-04:00."
+  }
 }

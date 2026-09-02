@@ -33,7 +33,32 @@ The no-overwrite publication path uses an atomic hard link to a verified tempora
 
 Ubuntu 24.04 x86-64, Codex CLI 0.147.0, Node.js 22.23.2: Portable Compression v0.2.1 installed successfully from `rollerfeet-plugins` and was enabled. The two established XML fixtures produced a 1,061-byte ZIP containing both files, with SHA-256 `3b2f50b7e97d7031b6cc51c0a485b9c8ed41e5e0792f81f006e25158fae76aa8`, matching the reported macOS and ChatGPT Work results byte-for-byte by digest.
 
-The screenshot was reported to show four plugin-operation commands: preflight checks, `mkdir -p outputs`, helper execution, and postflight `test`/`stat`. A possible fifth prompt was likely initial directory trust and is not counted without further evidence. v0.2.2 eliminates the instructions that lead to those ancillary commands; its real cold-start approval count still needs installation testing. One shell invocation is a workflow contract, not a guarantee about host-managed approval counts.
+The screenshot was reported to show four plugin-operation commands: preflight checks, `mkdir -p outputs`, helper execution, and postflight `test`/`stat`. A possible fifth prompt was likely initial directory trust and is not counted without further evidence. This historical v0.2.1 result motivated the v0.2.2 single-command contract. One shell invocation is a workflow contract, not a guarantee about host-managed approval counts.
+
+### v0.2.2 installation acceptance results — 2026-09-02
+
+The published version tested was `d988e811064cca1d440f286f1b6abd7b4d93faad`. The two established XML fixtures were passed as separate files for the matching comparisons below.
+
+| Environment | ZIP | TAR.GZ | Observed approvals per archive |
+| --- | --- | --- | --- |
+| Mac Codex | 1,061 bytes; baseline digest match | 536 bytes; baseline digest match | 0, user reported |
+| Linux Codex | 1,061 bytes; baseline digest match | 536 bytes; baseline digest match | 2: instruction read and helper execution |
+| ChatGPT Work on Mac | 1,061 bytes; baseline digest match | 536 bytes; baseline digest match | 0, user reported |
+
+Baseline SHA-256 values:
+
+- ZIP: `3b2f50b7e97d7031b6cc51c0a485b9c8ed41e5e0792f81f006e25158fae76aa8`
+- TAR.GZ: `1cd5a09012d349fa6e3817f017e66db81dc3b37917eb97280dbb4f02447f8998`
+
+Mac and Work output sizes and hashes were checked directly in the development task. Linux values and approvals are evidenced by user-provided screenshots, not an independent read of the Linux archives. All six results match the established per-format fingerprints. These tests support deterministic output for these fixtures; they do not establish all possible cross-platform cases.
+
+Mac task histories show one skill-instruction read followed by exactly one archive-creation command, with no ancillary checks. Linux screenshots likewise show those two commands. Work's visible summaries show a command entry, consistent with the contract, but the full commands and helper JSON were not inspected. Developer-side hash checks were separate acceptance verification, not plugin-operation commands.
+
+The matching Linux ZIP was a follow-up in the same session. Linux TAR.GZ was a fresh-session test; its screenshot identifies Codex CLI **0.152.1**. The earlier **0.147.0** version belongs to the v0.2.1 environment report and must not be assumed for these later runs. Mac ZIP/TAR.GZ were separate new tasks; Work tests were requested in new conversations. Zero prompts do not prove a permission-reset cold start.
+
+The initial v0.2.2 Linux directory-input ZIP contained two files but was 1,089 bytes with a different digest. It passed the whole `inputs` directory instead of two individual file roots, so it is a different packaging case, not a failed identical-input comparison. A preserved `inputs/` member prefix would explain the 28-byte difference, but that archive's member names were not independently inspected. An earlier canceled request using `/input` is separate from the completed attempts.
+
+Linux approvals were granted **this time**. Similar runs may prompt again under the unchanged host policy. The tests do not establish which Linux policy setting caused the prompts or why Mac/Work did not prompt. No permissions were relaxed for this documentation update. The result is one archive-creation command, not a promise of zero approvals on every host.
 
 ## Development time
 
@@ -42,6 +67,8 @@ Version 0.2.2 was recorded 22 hours, 9 minutes, 40 seconds after development beg
 The project clock measures elapsed wall-clock time from the original start through each Git version. The AI-waiting clock accumulates the interval from receipt of each user prompt through release of the complete response. See `development-time.json` for the tracking basis used by later versions.
 
 The v0.2.1 boundary remains preserved at 24,982 project seconds and 2,394 AI-waiting seconds. v0.2.2 adds 634 seconds from separate post-boundary Mac task intervals and the following agreed estimate, counted once: Additional estimated AI-waiting from separate testing thread: 600 seconds. The earlier rough 264-second Mac checkpoint was superseded by recorded task intervals, not added again. Final response-delivery times may be approximated by the closest observable pre-release timestamp; the release turn's tail after this cutoff carries into the next version.
+
+Documentation checkpoint (plugin remains v0.2.2): 2026-09-02T19:26:34.000Z. Cumulative project age is **26:47:34** (96,454 seconds); cumulative AI waiting is **1:15:14** (4,514 seconds, approximately 75 minutes). This adds 706 seconds of recovered post-release Mac/Work task intervals plus **180 estimated seconds for Linux acceptance-test responses**, agreed by the user. The earlier 600-second estimate is already included in the release baseline and was not added again. Overlapping recovered intervals were merged before rounding; internal reviewer tasks were excluded. Exact Linux intervals were unavailable after SSH authentication failed, so their estimate remains explicitly approximate. See `development-time.json` for the checkpoint and intervals. The project clock continues until retirement; the active response's tail after this cutoff carries into the next checkpoint.
 
 ## Direct helper use
 
