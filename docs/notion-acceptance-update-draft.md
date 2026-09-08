@@ -2,6 +2,8 @@
 
 Status: approved by Johnny on 2026-09-02; acceptance update published to Notion and verified. This file preserves the approved review draft below as history. The documentation checkpoint is reconciled in README.md and development-time.json; the Linux estimate of 180 seconds was explicitly approved.
 
+Follow-up for v0.2.3, 2026-09-08: a fresh Work ZIP again matched the 1,061-byte baseline and established SHA-256 with no user-reported prompt. Work exposed a skill-read event and one command event but not the command text or helper JSON, and no documented visibility setting was found. A fresh Linux CLI run under user-selected `codex --approve-for-me` exposed the complete transcript: one instruction read, one helper invocation, both files passed separately, the expected JSON, and no approval prompt. This closes the prior evidence gap as a Work-interface limitation and documents optional host-side automatic approval review without changing plugin permissions.
+
 Destination: [Project: Portable Compression Plugin](https://app.notion.com/p/3ce76785d91981d9bb65c5313ecb1bdd).
 
 Documentation standard: [Documentation, Storage & Handoff Standard (DSHS)](https://app.notion.com/p/3c676785d9198120a3d5fac250d63583).

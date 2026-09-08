@@ -11,7 +11,7 @@ Portable Compression is a skills-only plugin for ChatGPT Work and Codex. It crea
 - Avoid overwriting existing outputs unless explicitly authorized.
 - Produce a SHA-256 digest and machine-readable result for every archive.
 
-Version 0.2.2 creates archives only. It does not extract archives, encrypt archives, accept URLs, or provide an unattended service.
+Version 0.2.3 creates archives only. It does not extract archives, encrypt archives, accept URLs, or provide an unattended service.
 
 ## ChatGPT Work workflow
 
@@ -60,6 +60,18 @@ The initial v0.2.2 Linux directory-input ZIP contained two files but was 1,089 b
 
 Linux approvals were granted **this time**. Similar runs may prompt again under the unchanged host policy. The tests do not establish which Linux policy setting caused the prompts or why Mac/Work did not prompt. No permissions were relaxed for this documentation update. The result is one archive-creation command, not a promise of zero approvals on every host.
 
+### v0.2.3 approval and command-evidence follow-up — 2026-09-08
+
+A fresh ChatGPT Work test loaded the Portable Compression skill and recorded one archive command with no user-reported approval prompt. Work did not expose the command text or raw helper output: its expanded activity showed **Read Compress Files skill** and **Ran command**, but the latter was not interactive. No documented Work setting was found that changes this visibility. The saved output was 1,061 bytes and matched the established ZIP SHA-256 exactly, so the Work command-detail limitation is documented rather than left as an unresolved compression result.
+
+A fresh Linux Codex CLI test then started with the optional `codex --approve-for-me` flag. The transcript exposed one `cat` instruction read followed by exactly one compression-helper invocation, with both XML fixtures supplied as separate `--input` arguments. There were no separate preflight, directory, checksum, listing, or postflight commands, and Johnny reported zero approval prompts. The helper returned:
+
+```json
+{"ok":true,"format":"zip","output":"/home/jaireaux/Software/portable-compression-linux-test/portable-compression-v022-cli-evidence.zip","input_bytes":1799,"archive_bytes":1061,"file_count":2,"sha256":"3b2f50b7e97d7031b6cc51c0a485b9c8ed41e5e0792f81f006e25158fae76aa8"}
+```
+
+This demonstrates a zero-interactive-prompt run for that tested session; it does not make zero prompts a plugin guarantee. `--approve-for-me` changes Codex CLI's host-side approval handling while retaining its workspace-write sandbox. It is optional and must be chosen by the user. Portable Compression does not enable it. The dangerous `--dangerously-bypass-approvals-and-sandbox` mode is neither required nor recommended.
+
 ## Development time
 
 Version 0.2.2 was recorded 22 hours, 9 minutes, 40 seconds after development began on September 1, 2026 at 12:39 PM EDT (79,780 elapsed seconds through 2026-09-02T14:48:40Z). Approximately 60 minutes were spent waiting on AI (3,628 seconds). Both totals are cumulative; AI timing includes explicitly labeled estimates.
@@ -69,6 +81,8 @@ The project clock measures elapsed wall-clock time from the original start throu
 The v0.2.1 boundary remains preserved at 24,982 project seconds and 2,394 AI-waiting seconds. v0.2.2 adds 634 seconds from separate post-boundary Mac task intervals and the following agreed estimate, counted once: Additional estimated AI-waiting from separate testing thread: 600 seconds. The earlier rough 264-second Mac checkpoint was superseded by recorded task intervals, not added again. Final response-delivery times may be approximated by the closest observable pre-release timestamp; the release turn's tail after this cutoff carries into the next version.
 
 Documentation checkpoint (plugin remains v0.2.2): 2026-09-02T19:26:34.000Z. Cumulative project age is **26:47:34** (96,454 seconds); cumulative AI waiting is **1:15:14** (4,514 seconds, approximately 75 minutes). This adds 706 seconds of recovered post-release Mac/Work task intervals plus **180 estimated seconds for Linux acceptance-test responses**, agreed by the user. The earlier 600-second estimate is already included in the release baseline and was not added again. Overlapping recovered intervals were merged before rounding; internal reviewer tasks were excluded. Exact Linux intervals were unavailable after SSH authentication failed, so their estimate remains explicitly approximate. See `development-time.json` for the checkpoint and intervals. The project clock continues until retirement; the active response's tail after this cutoff carries into the next checkpoint.
+
+Version 0.2.3 was recorded **171:51:46** after development began (618,706 elapsed seconds through 2026-09-08T20:30:45.947Z). Cumulative AI waiting is **1:36:04** (5,764 seconds, approximately 96 minutes). The increment since the preceding documentation checkpoint is 1,250 seconds: 943 seconds recovered from Mac development and Work task timestamps, an explicitly estimated 60 seconds for the separate Linux CLI evidence run, and 247 seconds of the active release turn through the pre-commit cutoff. Previously recorded 600-second and 180-second estimates were not added again. Exact final-response delivery may trail the release timestamp by a few seconds; that tail belongs to the next checkpoint.
 
 ## Direct helper use
 

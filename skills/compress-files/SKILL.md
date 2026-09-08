@@ -42,6 +42,12 @@ Use ChatGPT Work/Codex's bundled Node runtime directly through `CODEX_PRIMARY_RU
 
 This contract governs plugin-operation commands, not the host's initial directory-trust prompt. One invocation does not guarantee one approval: the host controls its own file and execution permissions.
 
+## Optional Codex CLI approval review
+
+When a user explicitly wants fewer interactive approvals in Codex CLI, they may start a fresh session with `codex --approve-for-me`. This is a host setting, not plugin behavior: it keeps the workspace-write sandbox and routes approval requests through automatic review. Do not enable it on the user's behalf, do not claim it guarantees zero prompts, and do not use or recommend `--dangerously-bypass-approvals-and-sandbox`.
+
+Without that optional host setting, an installed skill read and helper execution may each require approval. Those host-managed prompts do not violate the one-helper-command contract. Do not add plugin-operation commands to compensate for them.
+
 ## Boundaries
 
 - Create archives only; this version does not extract them.

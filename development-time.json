@@ -156,8 +156,8 @@
       "precision": "Active release turn through pre-commit cutoff only; carry its remaining delivery tail into the next version."
     }
   ],
-  "estimated_unmeasured_ai_waiting_seconds": 1800,
-  "current_cumulative_ai_waiting_seconds": 4514,
+  "estimated_unmeasured_ai_waiting_seconds": 1860,
+  "current_cumulative_ai_waiting_seconds": 5764,
   "versions": [
     {
       "version": "0.1.1",
@@ -188,6 +188,18 @@
       "prior_cumulative_ai_waiting_seconds": 2394,
       "additional_mac_ai_waiting_seconds": 634,
       "additional_estimated_testing_ai_waiting_seconds": 600
+    },
+    {
+      "version": "0.2.3",
+      "recorded_at_approx": "2026-09-08T20:30:45.947Z",
+      "project_elapsed_seconds": 618706,
+      "project_elapsed_human": "171:51:46",
+      "cumulative_ai_waiting_seconds": 5764,
+      "cumulative_ai_waiting_human": "1:36:04",
+      "prior_cumulative_ai_waiting_seconds": 4514,
+      "additional_recovered_ai_waiting_seconds": 943,
+      "additional_estimated_linux_cli_ai_waiting_seconds": 60,
+      "active_release_turn_seconds_through_cutoff": 247
     }
   ],
   "estimated_adjustments": [
@@ -205,6 +217,30 @@
       "included_in_checkpoint": "v0.2.2-acceptance-documentation",
       "source": "User agreed on 2026-09-02 after SSH authentication prevented recovering Linux timestamps. Covers the shown Linux test responses, not the intervening development-thread reporting. Separate from the earlier 600-second estimate.",
       "precision": "Estimated; exact placement and overlap cannot be independently reconstructed. Screenshots show completed tests before the corresponding development-thread reports."
+    },
+    {
+      "id": "linux-v023-cli-evidence-60",
+      "description": "Additional estimated AI-waiting from the separate Linux CLI evidence task: 60 seconds",
+      "duration_seconds": 60,
+      "included_through_version": "0.2.3",
+      "source": "Estimated from the completed CLI evidence and screenshot timestamps; the remote task event log was not available in the Mac workspace.",
+      "precision": "Estimated; kept separate from recovered Mac and Work task intervals."
+    },
+    {
+      "id": "v0.2.3-release",
+      "plugin_version": "0.2.3",
+      "recorded_at_approx": "2026-09-08T20:30:45.947Z",
+      "project_elapsed_seconds": 618706,
+      "project_elapsed_human": "171:51:46",
+      "prior_cumulative_ai_waiting_seconds": 4514,
+      "additional_recovered_ai_waiting_milliseconds": 942501,
+      "additional_recovered_ai_waiting_seconds": 943,
+      "additional_estimated_linux_cli_ai_waiting_seconds": 60,
+      "active_release_turn_seconds_through_cutoff": 247,
+      "cumulative_ai_waiting_seconds": 5764,
+      "cumulative_ai_waiting_human": "1:36:04",
+      "method": "Continue from the v0.2.2 acceptance-documentation cutoff. Union prompt-receipt-to-complete-response intervals from the Mac development task and separate Work evidence task, round the recovered union once, add the separately labeled Linux CLI estimate once, and clip the active release turn at the pre-commit cutoff. Exclude internal reviewer/subagent work and do not re-add prior estimates.",
+      "limitation": "Exact final-response delivery may trail the recorded release timestamp by a few seconds; that tail belongs to the next checkpoint. The Linux CLI interval is estimated because its remote task timestamps were unavailable in the Mac workspace."
     }
   ],
   "documentation_checkpoints": [
@@ -479,8 +515,8 @@
     }
   ],
   "continuation": {
-    "after_cutoff": "2026-09-02T19:26:34.000Z",
-    "prior_cumulative_ai_waiting_seconds": 4514,
+    "after_cutoff": "2026-09-08T20:30:45.947Z",
+    "prior_cumulative_ai_waiting_seconds": 5764,
     "method": "Carry only later intervals and active-turn delivery tail into the next checkpoint; do not re-add the 600-second or 180-second estimates. Project age always starts at 2026-09-01T12:39:00-04:00."
   }
 }

@@ -121,6 +121,12 @@ try {
   assert.doesNotMatch(helperSource, /fflate\.js/);
   assert.match(helperSource, /fflate 0\.8\.2/);
 
+  const skillSource = fs.readFileSync(path.resolve(__dirname, '../skills/compress-files/SKILL.md'), 'utf8');
+  assert.match(skillSource, /codex --approve-for-me/);
+  assert.match(skillSource, /keeps the workspace-write sandbox/);
+  assert.match(skillSource, /do not use or recommend `--dangerously-bypass-approvals-and-sandbox`/);
+  assert.match(skillSource, /host setting, not plugin behavior/);
+
   // Copy just one JS file into an otherwise empty package and remove PATH.
   // Both formats must create and verify their output in one process.
   const standalone = path.join(root, 'standalone');
