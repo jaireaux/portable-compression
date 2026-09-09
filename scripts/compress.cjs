@@ -26,18 +26,21 @@ function fail(message) {
 
 function usage() {
   return [
-    'Usage: node compress.cjs --format zip|tar.gz --output PATH --input PATH [--input PATH ...] [--level 0-9] [--force]',
-    'Creates deterministic archives using only code bundled with this plugin.',
+    'Create:  node compress.cjs --format zip|tar.gz --output PATH --input PATH [--input PATH ...] [--level 0-9] [--force]',
+    'Extract: node compress.cjs --operation extract --format zip|tar.gz --output DIRECTORY --input ARCHIVE [--collision overwrite|keep-both|cancel]',
+    'Creates or extracts archives using only code bundled with this plugin.',
   ].join('\n');
 }
 
 function parseArgs(argv) {
-  const opts = { inputs: [], level: 9, force: false };
+  const opts = { operation: 'create', inputs: [], level: 9, force: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--input') opts.inputs.push(argv[++i]);
     else if (arg === '--output') opts.output = argv[++i];
     else if (arg === '--format') opts.format = argv[++i];
+    else if (arg === '--operation') opts.operation = argv[++i];
+    else if (arg === '--collision') opts.collision = argv[++i];
     else if (arg === '--level') opts.level = Number(argv[++i]);
     else if (arg === '--force') opts.force = true;
     else if (arg === '--help' || arg === '-h') {
@@ -45,10 +48,18 @@ function parseArgs(argv) {
       process.exit(0);
     } else fail(`Unknown argument: ${arg}`);
   }
+  if (!['create', 'extract'].includes(opts.operation)) fail('Operation must be create or extract.');
   if (!opts.format || !['zip', 'tar.gz'].includes(opts.format)) fail('Format must be zip or tar.gz.');
   if (!opts.output) fail('Missing --output.');
   if (!opts.inputs.length || opts.inputs.some((value) => !value)) fail('At least one valid --input is required.');
   if (!Number.isInteger(opts.level) || opts.level < 0 || opts.level > 9) fail('Compression level must be an integer from 0 through 9.');
+  if (opts.operation === 'extract') {
+    if (opts.inputs.length !== 1) fail('Extraction requires exactly one --input archive.');
+    if (opts.force) fail('Use --collision overwrite for extraction instead of --force.');
+    if (opts.collision && !['overwrite', 'keep-both', 'cancel'].includes(opts.collision)) {
+      fail('Collision policy must be overwrite, keep-both, or cancel.');
+    }
+  } else if (opts.collision) fail('--collision is only valid for extraction.');
   return opts;
 }
 
@@ -234,8 +245,259 @@ function makeZip(entries, level) {
   return archive;
 }
 
+function safeExtractPath(value) {
+  if (typeof value !== 'string' || !value || value.includes('\0') || value.includes('\\')) fail(`Unsafe archive path: ${value}`);
+  if (value.startsWith('/') || /^[A-Za-z]:/.test(value)) fail(`Unsafe archive path: ${value}`);
+  const directory = value.endsWith('/');
+  const trimmed = directory ? value.slice(0, -1) : value;
+  const parts = trimmed.split('/');
+  if (!trimmed || parts.some((part) => !part || part === '.' || part === '..')) fail(`Unsafe archive path: ${value}`);
+  if (Buffer.byteLength(trimmed, 'utf8') > 4096 || parts.length > 128) fail(`Archive path exceeds safety limits: ${value}`);
+  return { path: parts.join('/'), directory };
+}
+
+function decodeZipName(bytes, flags) {
+  if (!(flags & 0x800) && bytes.some((byte) => byte > 0x7f)) fail('ZIP member names must use UTF-8 or portable ASCII.');
+  const value = Buffer.from(bytes).toString('utf8');
+  if (value.includes('\uFFFD')) fail('ZIP member name is not valid UTF-8.');
+  return value;
+}
+
+function inspectZip(archive) {
+  let end = archive.length - 22;
+  for (; end >= 0 && archive.length - end <= 65557; end -= 1) {
+    if (archive.readUInt32LE(end) === 0x06054b50) break;
+  }
+  if (end < 0) fail('Invalid ZIP central directory.');
+  const count = archive.readUInt16LE(end + 10);
+  if (archive.readUInt16LE(end + 4) !== 0 || archive.readUInt16LE(end + 6) !== 0 || archive.readUInt16LE(end + 8) !== count) {
+    fail('Multi-disk ZIP archives are not supported.');
+  }
+  const centralSize = archive.readUInt32LE(end + 12);
+  let offset = archive.readUInt32LE(end + 16);
+  const centralStart = offset;
+  if (count === 0xffff || offset === 0xffffffff || centralSize === 0xffffffff) fail('ZIP64 archives are not supported.');
+  if (offset + centralSize > end) fail('Invalid ZIP central directory bounds.');
+  const entries = [];
+  const seen = new Set();
+  let totalBytes = 0;
+  for (let i = 0; i < count; i += 1) {
+    if (offset + 46 > archive.length || archive.readUInt32LE(offset) !== 0x02014b50) fail('Invalid ZIP central directory entry.');
+    const madeBy = archive.readUInt16LE(offset + 4);
+    const flags = archive.readUInt16LE(offset + 8);
+    const method = archive.readUInt16LE(offset + 10);
+    const size = archive.readUInt32LE(offset + 24);
+    const nameLength = archive.readUInt16LE(offset + 28);
+    const extraLength = archive.readUInt16LE(offset + 30);
+    const commentLength = archive.readUInt16LE(offset + 32);
+    const external = archive.readUInt32LE(offset + 38);
+    const nameStart = offset + 46;
+    const next = nameStart + nameLength + extraLength + commentLength;
+    if (next > archive.length) fail('Invalid ZIP member metadata.');
+    if (flags & 1) fail('Encrypted ZIP members are not supported.');
+    if (![0, 8].includes(method)) fail(`Unsupported ZIP compression method: ${method}`);
+    const name = decodeZipName(archive.subarray(nameStart, nameStart + nameLength), flags);
+    const safe = safeExtractPath(name);
+    const unixMode = madeBy >> 8 === 3 ? external >>> 16 : 0;
+    const unixType = unixMode & 0o170000;
+    const isDirectory = safe.directory || Boolean(external & 0x10) || unixType === 0o040000;
+    if (unixType && unixType !== 0o100000 && unixType !== 0o040000) fail(`Unsupported or unsafe ZIP member type: ${name}`);
+    if (isDirectory && size !== 0) fail(`ZIP directory has data: ${name}`);
+    if (seen.has(safe.path)) fail(`Duplicate archive path: ${safe.path}`);
+    seen.add(safe.path);
+    if (!isDirectory) {
+      totalBytes += size;
+      if (totalBytes > MAX_INPUT_BYTES) fail(`Extracted data exceeds the ${MAX_INPUT_BYTES}-byte limit.`);
+    }
+    entries.push({ archivePath: safe.path, type: isDirectory ? 'directory' : 'file', size });
+    offset = next;
+  }
+  if (offset !== centralStart + centralSize) fail('ZIP central directory size mismatch.');
+  if (entries.length > MAX_FILES) fail(`Archive exceeds the ${MAX_FILES}-entry limit.`);
+  const decoded = unzipSync(new Uint8Array(archive));
+  for (const entry of entries) {
+    if (entry.type === 'directory') continue;
+    const key = Object.keys(decoded).find((name) => safeExtractPath(name).path === entry.archivePath);
+    if (!key) fail(`ZIP member could not be decoded: ${entry.archivePath}`);
+    entry.content = Buffer.from(decoded[key]);
+    if (entry.content.length !== entry.size) fail(`ZIP member size mismatch: ${entry.archivePath}`);
+  }
+  return entries;
+}
+
+function readTarString(buffer, start, length) {
+  const value = buffer.subarray(start, start + length).toString('utf8').replace(/\0.*$/, '');
+  if (value.includes('\uFFFD')) fail('TAR member name is not valid UTF-8.');
+  return value;
+}
+
+function readTarOctal(buffer, start, length) {
+  const value = readTarString(buffer, start, length).trim();
+  if (!/^[0-7]*$/.test(value)) fail('Invalid TAR numeric field.');
+  return parseInt(value || '0', 8);
+}
+
+function inspectTarGz(archive) {
+  const tar = Buffer.from(gunzipSync(new Uint8Array(archive)));
+  const entries = [];
+  const seen = new Set();
+  let totalBytes = 0;
+  let ended = false;
+  for (let offset = 0; offset + 512 <= tar.length;) {
+    const header = tar.subarray(offset, offset + 512);
+    if (header.every((byte) => byte === 0)) {
+      ended = true;
+      break;
+    }
+    const storedChecksum = readTarOctal(header, 148, 8);
+    const checksumHeader = Buffer.from(header);
+    checksumHeader.fill(0x20, 148, 156);
+    const actualChecksum = checksumHeader.reduce((sum, byte) => sum + byte, 0);
+    if (storedChecksum !== actualChecksum) fail('Invalid TAR header checksum.');
+    const prefix = readTarString(header, 345, 155);
+    const base = readTarString(header, 0, 100);
+    const name = prefix ? `${prefix}/${base}` : base;
+    const typeByte = header[156];
+    const isFile = typeByte === 0 || typeByte === 0x30;
+    const isDirectory = typeByte === 0x35;
+    if (!isFile && !isDirectory) fail(`Unsupported or unsafe TAR member type: ${name}`);
+    const safe = safeExtractPath(name);
+    const normalizedType = isDirectory || safe.directory ? 'directory' : 'file';
+    if (seen.has(safe.path)) fail(`Duplicate archive path: ${safe.path}`);
+    seen.add(safe.path);
+    const size = readTarOctal(header, 124, 12);
+    const dataStart = offset + 512;
+    const dataEnd = dataStart + size;
+    if (dataEnd > tar.length) fail(`Truncated TAR member: ${safe.path}`);
+    if (normalizedType === 'directory' && size !== 0) fail(`TAR directory has data: ${safe.path}`);
+    const entry = { archivePath: safe.path, type: normalizedType, size };
+    if (normalizedType === 'file') {
+      entry.content = Buffer.from(tar.subarray(dataStart, dataEnd));
+      totalBytes += size;
+      if (totalBytes > MAX_INPUT_BYTES) fail(`Extracted data exceeds the ${MAX_INPUT_BYTES}-byte limit.`);
+    }
+    entries.push(entry);
+    if (entries.length > MAX_FILES) fail(`Archive exceeds the ${MAX_FILES}-entry limit.`);
+    offset = dataStart + Math.ceil(size / 512) * 512;
+  }
+  if (!ended) fail('TAR archive is missing its end marker.');
+  return entries;
+}
+
+function planExtractionDirectory(rawOutput) {
+  const output = path.resolve(rawOutput);
+  const stat = lstatIfPresent(output);
+  if (stat) {
+    if (stat.isSymbolicLink()) fail('Extraction directory must not be a symbolic link.');
+    if (!stat.isDirectory()) fail('Extraction output is not a directory.');
+    return { output: fs.realpathSync(output), create: false };
+  }
+  const parent = path.dirname(output);
+  const parentStat = lstatIfPresent(parent);
+  if (!parentStat || parentStat.isSymbolicLink() || !parentStat.isDirectory()) fail('Extraction output parent must be an existing real directory.');
+  return { output: path.join(fs.realpathSync(parent), path.basename(output)), create: true };
+}
+
+function inspectDestination(root, relativePath, expectDirectory) {
+  const parts = relativePath.split('/');
+  let current = root;
+  for (let i = 0; i < parts.length; i += 1) {
+    current = path.join(current, parts[i]);
+    if (!pathInside(current, root)) fail(`Extraction path escapes the destination: ${relativePath}`);
+    const stat = lstatIfPresent(current);
+    if (!stat) return null;
+    if (stat.isSymbolicLink()) fail(`Extraction path contains a symbolic link: ${relativePath}`);
+    const leaf = i === parts.length - 1;
+    if (!leaf && !stat.isDirectory()) fail(`Extraction path has a non-directory parent: ${relativePath}`);
+    if (leaf) {
+      if (expectDirectory && !stat.isDirectory()) fail(`Archive directory conflicts with a file: ${relativePath}`);
+      if (!expectDirectory && !stat.isFile()) fail(`Archive file conflicts with a non-file: ${relativePath}`);
+      return stat;
+    }
+  }
+  return null;
+}
+
+function keepBothPath(root, relativePath, reserved) {
+  const extension = path.posix.extname(relativePath);
+  const base = extension ? relativePath.slice(0, -extension.length) : relativePath;
+  for (let number = 2; number < 100000; number += 1) {
+    const candidate = `${base} (${number})${extension}`;
+    if (!reserved.has(candidate) && !lstatIfPresent(path.join(root, ...candidate.split('/')))) return candidate;
+  }
+  fail(`Unable to choose a keep-both name for: ${relativePath}`);
+}
+
+function extractArchive(opts) {
+  const input = path.resolve(opts.inputs[0]);
+  const inputStat = lstatIfPresent(input);
+  if (!inputStat || inputStat.isSymbolicLink() || !inputStat.isFile()) fail('Extraction input must be an existing regular archive file.');
+  const archive = fs.readFileSync(input);
+  if (archive.length > MAX_INPUT_BYTES) fail(`Archive exceeds the ${MAX_INPUT_BYTES}-byte limit.`);
+  const entries = opts.format === 'zip' ? inspectZip(archive) : inspectTarGz(archive);
+  const files = entries.filter((entry) => entry.type === 'file');
+  const destination = planExtractionDirectory(opts.output);
+  const collisions = destination.create ? [] : files.filter((entry) => inspectDestination(destination.output, entry.archivePath, false)).map((entry) => entry.archivePath);
+  if (collisions.length && !opts.collision) {
+    process.stdout.write(`${JSON.stringify({ ok: false, status: 'decision_required', operation: 'extract', format: opts.format, output_directory: destination.output, collision_count: collisions.length, collisions: collisions.slice(0, 100), collisions_truncated: collisions.length > 100, choices: ['overwrite', 'keep-both', 'cancel'], prompt: 'Collision found: (o)verwrite, (k)eep both, or (c)ancel?' })}\n`);
+    process.exitCode = 2;
+    return;
+  }
+  if (collisions.length && opts.collision === 'cancel') {
+    process.stdout.write(`${JSON.stringify({ ok: false, status: 'cancelled', operation: 'extract', format: opts.format, output_directory: destination.output, collision_count: collisions.length })}\n`);
+    return;
+  }
+  const reserved = new Set(entries.map((entry) => entry.archivePath));
+  let renamedCount = 0;
+  if (opts.collision === 'keep-both') {
+    for (const entry of files) {
+      if (!collisions.includes(entry.archivePath)) continue;
+      reserved.delete(entry.archivePath);
+      entry.outputPath = keepBothPath(destination.output, entry.archivePath, reserved);
+      reserved.add(entry.outputPath);
+      renamedCount += 1;
+    }
+  }
+  for (const entry of entries) entry.outputPath ||= entry.archivePath;
+  for (const entry of entries) inspectDestination(destination.output, entry.outputPath, entry.type === 'directory');
+  const parent = path.dirname(destination.output);
+  const staging = path.join(parent, `.${path.basename(destination.output)}.tmp-${process.pid}-${crypto.randomBytes(6).toString('hex')}`);
+  fs.mkdirSync(staging, { mode: 0o700 });
+  try {
+    for (const entry of entries) {
+      const staged = path.join(staging, ...entry.outputPath.split('/'));
+      if (entry.type === 'directory') fs.mkdirSync(staged, { recursive: true, mode: 0o755 });
+      else {
+        fs.mkdirSync(path.dirname(staged), { recursive: true, mode: 0o755 });
+        fs.writeFileSync(staged, entry.content, { flag: 'wx', mode: 0o600 });
+        if (!fs.readFileSync(staged).equals(entry.content)) fail(`Staged extraction integrity check failed: ${entry.outputPath}`);
+      }
+    }
+    if (destination.create) fs.renameSync(staging, destination.output);
+    else {
+      for (const entry of entries.filter((item) => item.type === 'directory')) fs.mkdirSync(path.join(destination.output, ...entry.outputPath.split('/')), { recursive: true, mode: 0o755 });
+      for (const entry of files) {
+        const target = path.join(destination.output, ...entry.outputPath.split('/'));
+        fs.mkdirSync(path.dirname(target), { recursive: true, mode: 0o755 });
+        inspectDestination(destination.output, entry.outputPath, false);
+        if (!lstatIfPresent(target)) fs.linkSync(path.join(staging, ...entry.outputPath.split('/')), target);
+        else if (opts.collision === 'overwrite') fs.renameSync(path.join(staging, ...entry.outputPath.split('/')), target);
+        else fail(`Destination changed during extraction: ${entry.outputPath}`);
+      }
+    }
+  } finally {
+    if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
+  }
+  for (const entry of files) {
+    const target = path.join(destination.output, ...entry.outputPath.split('/'));
+    if (!fs.readFileSync(target).equals(entry.content)) fail(`Final extraction integrity check failed: ${entry.outputPath}`);
+  }
+  process.stdout.write(`${JSON.stringify({ ok: true, operation: 'extract', format: opts.format, input, output_directory: destination.output, archive_bytes: archive.length, extracted_bytes: files.reduce((sum, entry) => sum + entry.content.length, 0), file_count: files.length, collision_policy: opts.collision || 'none', renamed_count: renamedCount, sha256: crypto.createHash('sha256').update(archive).digest('hex') })}\n`);
+}
+
 function main() {
   const opts = parseArgs(process.argv.slice(2));
+  if (opts.operation === 'extract') return extractArchive(opts);
   const destination = planOutput(opts.output, opts.force);
   const { outputPath } = destination;
   const { entries, totalBytes } = collectEntries(opts.inputs, outputPath);

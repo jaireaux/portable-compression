@@ -8,7 +8,7 @@ const { builtinModules } = require('node:module');
 const crypto = require('node:crypto');
 const vm = require('node:vm');
 const { execFileSync, spawnSync } = require('node:child_process');
-const { gunzipSync, inflateRawSync } = require('node:zlib');
+const { gzipSync, gunzipSync, inflateRawSync } = require('node:zlib');
 
 const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'portable-compression-test-'));
 const input = path.join(root, 'sample');
@@ -29,6 +29,11 @@ function invoke(args, executable = helper, env = process.env) {
 
 function argsFor(format, output, inputs = [input]) {
   return ['--format', format, '--output', output, ...inputs.flatMap((file) => ['--input', file])];
+}
+
+function extractArgs(format, archive, output, collision) {
+  return ['--operation', 'extract', '--format', format, '--output', output, '--input', archive,
+    ...(collision ? ['--collision', collision] : [])];
 }
 
 function expectFailure(args, message) {
@@ -126,6 +131,12 @@ try {
   assert.match(skillSource, /keeps the workspace-write sandbox/);
   assert.match(skillSource, /do not use or recommend `--dangerously-bypass-approvals-and-sandbox`/);
   assert.match(skillSource, /host setting, not plugin behavior/);
+  assert.match(skillSource, /directory containing this exact `SKILL\.md` file \(`skills\/compress-files`\), not from its parent `skills` directory/);
+  assert.match(skillSource, /Reporting the helper JSON alone is incomplete when `status` is `decision_required`/);
+  assert.match(skillSource, /repeat the returned `prompt` verbatim as the final line/);
+  assert.match(skillSource, /The expected prompt is: \*\*Collision found: \(o\)verwrite, \(k\)eep both, or \(c\)ancel\?\*\*/);
+  assert.match(skillSource, /Stop and wait for the user's explicit choice/);
+  assert.match(skillSource, /never finish that turn with the JSON alone/);
 
   // Copy just one JS file into an otherwise empty package and remove PATH.
   // Both formats must create and verify their output in one process.
@@ -146,6 +157,13 @@ try {
     const repeatResult = invoke(argsFor(format, repeat), standaloneHelper, { ...process.env, PATH: '', NODE_PATH: '' });
     assert.equal(repeatResult.status, 0, repeatResult.stderr);
     assert.deepEqual(fs.readFileSync(output), fs.readFileSync(repeat));
+    const extractionOutput = path.join(base, `extracted-${format}`);
+    const extractionResult = invoke(extractArgs(format, output, extractionOutput), standaloneHelper, { ...process.env, PATH: '', NODE_PATH: '' });
+    assert.equal(extractionResult.status, 0, extractionResult.stderr);
+    const extractionReport = JSON.parse(extractionResult.stdout);
+    assert.equal(extractionReport.ok, true);
+    assert.equal(extractionReport.operation, 'extract');
+    assert.equal(fs.readFileSync(path.join(extractionOutput, 'sample', 'alpha.txt'), 'utf8'), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
     assert.deepEqual(fs.readdirSync(standalone), ['compress.cjs']);
     assert.ok(fs.readdirSync(path.dirname(output)).every((name) => !name.includes('.tmp-')));
   }
@@ -161,7 +179,7 @@ try {
     fs.symlinkSync(process.execPath, runtimeLink);
     const output = path.join(shellBase, 'outputs', 'archive.tar.gz');
     const executableCommand = command
-      .replace('<skill-directory>/../../scripts/compress.cjs', standaloneHelper)
+      .replace('<directory-containing-this-SKILL.md>/../../scripts/compress.cjs', standaloneHelper)
       .replace('/absolute/path/to/outputs/archive.tar.gz', JSON.stringify(output))
       .replace('/absolute/path/to/file-or-directory', JSON.stringify(input));
     const shellResult = spawnSync('/bin/sh', ['-c', executableCommand], {
@@ -210,6 +228,87 @@ try {
   const edtTgzPath = path.join(root, 'sample-edt.tar.gz');
   run('tar.gz', edtTgzPath, { ...process.env, TZ: 'Pacific/Kiritimati' });
   assert.deepEqual(fs.readFileSync(edtTgzPath), fs.readFileSync(tgzPath));
+
+  for (const [format, archive] of [['zip', zipPath], ['tar.gz', tgzPath]]) {
+    const extracted = path.join(root, `extracted-${format}`);
+    const extraction = invoke(extractArgs(format, archive, extracted));
+    assert.equal(extraction.status, 0, extraction.stderr);
+    assert.equal(extraction.stderr, '');
+    const report = JSON.parse(extraction.stdout);
+    assert.deepEqual(Object.keys(report).sort(), ['ok', 'operation', 'format', 'input', 'output_directory', 'archive_bytes', 'extracted_bytes', 'file_count', 'collision_policy', 'renamed_count', 'sha256'].sort());
+    assert.equal(report.ok, true);
+    assert.equal(report.operation, 'extract');
+    assert.equal(report.format, format);
+    assert.equal(report.input, archive);
+    assert.equal(report.output_directory, extracted);
+    assert.equal(report.file_count, 2);
+    assert.equal(report.extracted_bytes, 6800);
+    assert.equal(report.collision_policy, 'none');
+    assert.equal(report.renamed_count, 0);
+    assert.equal(report.sha256, crypto.createHash('sha256').update(fs.readFileSync(archive)).digest('hex'));
+    assert.equal(fs.readFileSync(path.join(extracted, 'sample', 'alpha.txt'), 'utf8'), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
+    assert.equal(fs.readFileSync(path.join(extracted, 'sample', 'nested', 'beta.txt'), 'utf8'), fs.readFileSync(path.join(input, 'nested', 'beta.txt'), 'utf8'));
+  }
+
+  const collisionRoot = path.join(root, 'collisions');
+  fs.mkdirSync(path.join(collisionRoot, 'sample'), { recursive: true });
+  const collisionFile = path.join(collisionRoot, 'sample', 'alpha.txt');
+  fs.writeFileSync(collisionFile, 'keep me');
+  const decision = invoke(extractArgs('zip', zipPath, collisionRoot));
+  assert.equal(decision.status, 2);
+  assert.equal(decision.stderr, '');
+  const decisionReport = JSON.parse(decision.stdout);
+  assert.equal(decisionReport.ok, false);
+  assert.equal(decisionReport.status, 'decision_required');
+  assert.deepEqual(decisionReport.choices, ['overwrite', 'keep-both', 'cancel']);
+  assert.equal(decisionReport.prompt, 'Collision found: (o)verwrite, (k)eep both, or (c)ancel?');
+  assert.deepEqual(decisionReport.collisions, ['sample/alpha.txt']);
+  assert.equal(fs.readFileSync(collisionFile, 'utf8'), 'keep me');
+  assert.equal(fs.existsSync(path.join(collisionRoot, 'sample', 'nested', 'beta.txt')), false);
+
+  const cancelled = invoke(extractArgs('zip', zipPath, collisionRoot, 'cancel'));
+  assert.equal(cancelled.status, 0, cancelled.stderr);
+  assert.equal(JSON.parse(cancelled.stdout).status, 'cancelled');
+  assert.equal(fs.readFileSync(collisionFile, 'utf8'), 'keep me');
+
+  const kept = invoke(extractArgs('zip', zipPath, collisionRoot, 'keep-both'));
+  assert.equal(kept.status, 0, kept.stderr);
+  const keptReport = JSON.parse(kept.stdout);
+  assert.equal(keptReport.renamed_count, 1);
+  assert.equal(fs.readFileSync(collisionFile, 'utf8'), 'keep me');
+  assert.equal(fs.readFileSync(path.join(collisionRoot, 'sample', 'alpha (2).txt'), 'utf8'), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
+
+  fs.writeFileSync(collisionFile, 'replace me');
+  const overwritten = invoke(extractArgs('zip', zipPath, collisionRoot, 'overwrite'));
+  assert.equal(overwritten.status, 0, overwritten.stderr);
+  assert.equal(fs.readFileSync(collisionFile, 'utf8'), fs.readFileSync(path.join(input, 'alpha.txt'), 'utf8'));
+
+  const unsafeTar = Buffer.from(gunzipSync(fs.readFileSync(tgzPath)));
+  unsafeTar.fill(0, 0, 100);
+  unsafeTar.write('../evil.txt', 0, 'utf8');
+  unsafeTar.fill(0x20, 148, 156);
+  const unsafeChecksum = unsafeTar.subarray(0, 512).reduce((sum, byte) => sum + byte, 0);
+  unsafeTar.write(`${unsafeChecksum.toString(8).padStart(6, '0')}\0 `, 148, 'ascii');
+  const unsafeTgz = path.join(root, 'unsafe-member.tar.gz');
+  fs.writeFileSync(unsafeTgz, gzipSync(unsafeTar));
+  expectFailure(extractArgs('tar.gz', unsafeTgz, path.join(root, 'unsafe-tar-output')), /Unsafe archive path/);
+  assert.equal(fs.existsSync(path.join(root, 'evil.txt')), false);
+
+  const unsafeZipBytes = Buffer.from(fs.readFileSync(zipPath));
+  const centralOffset = unsafeZipBytes.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+  assert.ok(centralOffset >= 0);
+  unsafeZipBytes.writeUInt16LE((3 << 8) | 20, centralOffset + 4);
+  unsafeZipBytes.writeUInt32LE((0o120777 << 16) >>> 0, centralOffset + 38);
+  const unsafeZip = path.join(root, 'unsafe-member.zip');
+  fs.writeFileSync(unsafeZip, unsafeZipBytes);
+  expectFailure(extractArgs('zip', unsafeZip, path.join(root, 'unsafe-zip-output')), /Unsupported or unsafe ZIP member type/);
+
+  if (process.platform !== 'win32') {
+    const extractionRoot = path.join(root, 'extraction-link-root');
+    fs.mkdirSync(extractionRoot);
+    fs.symlinkSync(input, path.join(extractionRoot, 'sample'));
+    expectFailure(extractArgs('zip', zipPath, extractionRoot), /symbolic link/);
+  }
 
   const overwrite = spawnSync(process.execPath, [helper, '--format', 'zip', '--output', zipPath, '--input', input], { encoding: 'utf8' });
   assert.notEqual(overwrite.status, 0);

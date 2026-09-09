@@ -1,17 +1,20 @@
 # Portable Compression
 
-Portable Compression is a skills-only plugin for ChatGPT Work and Codex. It creates deterministic ZIP and TAR.GZ archives without an MCP server, network compression service, or operating-system archive utility.
+Portable Compression is a skills-only plugin for ChatGPT Work and Codex. It creates deterministic ZIP and TAR.GZ archives and safely extracts them without an MCP server, network compression service, external package, or operating-system archive utility.
 
 ## Current scope
 
 - Create ZIP archives for broad recipient compatibility.
 - Create TAR.GZ archives for compact multi-file packaging.
+- Safely extract ZIP and TAR.GZ archives.
 - Bundle the pure-JavaScript compression implementation with the plugin.
 - Reject symbolic links and unsafe archive paths.
 - Avoid overwriting existing outputs unless explicitly authorized.
 - Produce a SHA-256 digest and machine-readable result for every archive.
 
-Version 0.2.3 creates archives only. It does not extract archives, encrypt archives, accept URLs, or provide an unattended service.
+Version 0.3.0 creates and extracts archives. It does not encrypt archives, accept URLs, or provide an unattended service.
+
+The pre-1.0 plugin identity uses a navy, cyan, teal, and warm-white archive-and-zipper mark. The composer icon and directory logo are bundled under `assets/`; the color scheme is planned for reconsideration at version 1.0.
 
 ## ChatGPT Work workflow
 
@@ -71,6 +74,24 @@ A fresh Linux Codex CLI test then started with the optional `codex --approve-for
 ```
 
 This demonstrates a zero-interactive-prompt run for that tested session; it does not make zero prompts a plugin guarantee. `--approve-for-me` changes Codex CLI's host-side approval handling while retaining its workspace-write sandbox. It is optional and must be chosen by the user. Portable Compression does not enable it. The dangerous `--dangerously-bypass-approvals-and-sandbox` mode is neither required nor recommended.
+
+## v0.3.0 safe extraction
+
+ZIP and TAR.GZ extraction uses the same self-contained JavaScript helper and bundled fflate implementation as archive creation. A no-collision extraction performs validation, staging, publication, integrity verification, and JSON reporting in exactly one helper invocation, with no separate listing, checksum, directory, or postflight commands.
+
+The helper rejects traversal and absolute paths, backslashes and drive-qualified names, duplicate members, symlinks, hard links, special files, encrypted or unsupported ZIP entries, unsafe destination links, and configured size, count, path-length, and path-depth limits. It decodes and validates the complete archive before staging files in a private directory and verifies final file contents after publication.
+
+When an existing regular file collides, the helper writes nothing and returns `decision_required`, including a `prompt` field containing the exact user-facing question. In the same response that reports the collisions and complete helper JSON, ChatGPT must repeat that prompt verbatim as its final line—**Collision found: (o)verwrite, (k)eep both, or (c)ancel?**—and wait for an explicit answer. Reporting JSON alone is incomplete, and a policy must not be inferred or reused from an earlier collision. The chosen policy is applied in one new self-contained invocation. This deliberately uses two attempts only for an unresolved collision because interactive input inside a running helper is not dependable across Work and Codex. Keep-both uses deterministic numbered filenames; overwrite never follows a symbolic link; cancel writes nothing. See [`docs/v0.3.0-extraction-spec.md`](docs/v0.3.0-extraction-spec.md) for the exact contract and JSON fields.
+
+ChatGPT Work acceptance testing on 2026-09-08 passed ZIP and TAR.GZ no-collision extraction, collision detection, cancel, keep-both, overwrite, and unsafe traversal rejection. The established two-file archives retained their expected sizes and SHA-256 values, and Johnny reported zero approval prompts throughout the extraction sequence. One conversational retry reused an earlier keep-both choice; explicitly instructing Work not to reuse or infer a prior collision policy restored the required decision-first behavior. These results validate the tested sessions and do not override host-managed permission policy. Full evidence details are recorded in the extraction specification.
+
+The same candidate passed its complete test suite and both validators on Ubuntu 24.04.4 LTS x86-64 with Node.js 22.23.2. Direct Linux helper tests passed both formats, every collision outcome, and traversal rejection without creating an output or escaped file.
+
+Installed-plugin acceptance through Codex CLI 0.153.4 in Termius covered eleven helper invocations: clean extraction, decision-required, cancel, keep-both, and overwrite for both ZIP and TAR.GZ, plus unsafe traversal rejection. Each outcome matched the established metadata and safety contract, with no preflight or postflight plugin commands. The recorded run exposed a presentation defect: after both `decision_required` results, Codex showed the complete JSON but omitted the collision question. The helper now returns the exact question in a machine-readable `prompt` field, and the skill requires that field to be repeated verbatim as the final response line before waiting.
+
+Final installed-candidate retesting passed on both hosts. LNM Codex CLI displayed the returned collision prompt and applied the explicit keep-both response with `renamed_count: 2`. Mac ChatGPT Work displayed the same prompt and applied the explicit overwrite response with `renamed_count: 0`; the archive retained the established 1,061-byte size, 1,799 extracted bytes, two-file count, and ZIP SHA-256. An earlier fresh Mac attempt was blocked before helper execution with `zsh:1: operation not permitted: node`; a later attempt succeeded unchanged, so this is recorded as a transient host-runtime denial rather than a plugin result. The collision-presentation acceptance gap is closed.
+
+An initial Linux attempt had revealed ambiguous helper-location wording and safely failed with `MODULE_NOT_FOUND`; the corrected instructions now resolve from the directory containing the exact `SKILL.md` file. LNM's earlier bubblewrap failure was traced to Ubuntu's AppArmor restriction on unprivileged user namespaces. A narrowly scoped `codex-userns` profile now grants `userns` to the resolved Codex executable, and `codex sandbox true` succeeds. The profile path is version-specific and must be updated after a Codex upgrade. This fixes sandbox startup, not normal approval handling: the recorded cold start requested approval for the installed skill read and helper execution, and later attempts requested helper-execution approval. These host-managed boundaries do not add plugin-operation commands. Full details are in the extraction specification.
 
 ## Development time
 
