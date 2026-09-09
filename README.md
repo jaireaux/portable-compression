@@ -1,6 +1,6 @@
 # Portable Compression
 
-Portable Compression is a skills-only plugin for ChatGPT Work and Codex. It creates deterministic ZIP and TAR.GZ archives and safely extracts them without an MCP server, network compression service, external package, or operating-system archive utility.
+I wanted ChatGPT to make a large text file, and I wanted to compress it so it would be easier to store and move around. That’s why I made Portable Compression. It works in ChatGPT Work mode and Codex, safely creates and extracts ZIP and TAR.GZ files, and runs entirely locally without relying on external services.
 
 ## Current scope
 
