@@ -97,6 +97,10 @@ Final installed-candidate retesting passed on both hosts. LNM Codex CLI displaye
 
 An initial Linux attempt had revealed ambiguous helper-location wording and safely failed with `MODULE_NOT_FOUND`; the corrected instructions now resolve from the directory containing the exact `SKILL.md` file. LNM's earlier bubblewrap failure was traced to Ubuntu's AppArmor restriction on unprivileged user namespaces. A narrowly scoped `codex-userns` profile now grants `userns` to the resolved Codex executable, and `codex sandbox true` succeeds. The profile path is version-specific and must be updated after a Codex upgrade. This fixes sandbox startup, not normal approval handling: the recorded cold start requested approval for the installed skill read and helper execution, and later attempts requested helper-execution approval. These host-managed boundaries do not add plugin-operation commands. Full details are in the extraction specification.
 
+## Development
+
+Portable Compression was conceived and directed by Johnny Rollerfeet and developed with substantial assistance from OpenAI Codex (aka Morgan). Morgan helped design, implement, test, document, and prepare the project for release. Johnny reviewed the project’s decisions and is responsible for the published result.
+
 ## Development time
 
 Version 0.2.2 was recorded 22 hours, 9 minutes, 40 seconds after development began on September 1, 2026 at 12:39 PM EDT (79,780 elapsed seconds through 2026-09-02T14:48:40Z). Approximately 60 minutes were spent waiting on AI (3,628 seconds). Both totals are cumulative; AI timing includes explicitly labeled estimates.
