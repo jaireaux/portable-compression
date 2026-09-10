@@ -9,7 +9,7 @@ Save outputs in a folder you have authorized the host to access. For the example
 ## 1. Zip an attached file
 
 ```text
-@Portable Compression zip this file.
+**@Portable Compression** zip this file.
 ```
 
 Attach one file. The plugin chooses the output name and reports the result.
@@ -17,7 +17,7 @@ Attach one file. The plugin chooses the output name and reports the result.
 ## 2. Bundle several files with a specific name
 
 ```text
-@Portable Compression put all attached files into outputs/project-files.zip in the current working folder. Preserve their contents and do not replace an existing archive.
+**@Portable Compression** put all attached files into outputs/project-files.zip in the current working folder. Preserve their contents and do not replace an existing archive.
 ```
 
 Attach every file you want included. If that archive already exists, creation stops without replacing it.
@@ -25,7 +25,7 @@ Attach every file you want included. If that archive already exists, creation st
 ## 3. Package a folder as TAR.GZ and report the savings
 
 ```text
-@Portable Compression compress the project-notes folder in the current working folder into outputs/project-notes.tar.gz. Include its files and subfolders. Do not overwrite an existing archive. Report the original size, archive size, percentage saved, file count, and SHA-256 hash from the helper's result.
+**@Portable Compression** compress the project-notes folder in the current working folder into outputs/project-notes.tar.gz. Include its files and subfolders. Do not overwrite an existing archive. Report the original size, archive size, percentage saved, file count, and SHA-256 hash from the helper's result.
 ```
 
 Provide access to `project-notes`. The size comparison is calculated from the returned byte counts; no separate inspection is needed. Compression may not reduce the size of already-compressed files.
@@ -33,7 +33,7 @@ Provide access to `project-notes`. The size comparison is calculated from the re
 ## 4. Extract while keeping existing copies
 
 ```text
-@Portable Compression extract the attached ZIP into the existing review-copy folder in the current working folder. If filenames collide, keep both by giving the extracted copies numbered names. Report the destination, extracted file count, and number of renamed files.
+**@Portable Compression** extract the attached ZIP into the existing review-copy folder in the current working folder. If filenames collide, keep both by giving the extracted copies numbered names. Report the destination, extracted file count, and number of renamed files.
 ```
 
 This explicitly chooses keep-both for this request. For example, an incoming `report.txt` might become `report (2).txt`. The choice does not carry over to later extraction requests.
@@ -41,7 +41,7 @@ This explicitly chooses keep-both for this request. For example, an incoming `re
 ## 5. Extract with an explicit collision decision and full results
 
 ```text
-@Portable Compression extract the attached TAR.GZ into the existing project-review folder in the current working folder. Treat this as a new request: do not reuse or infer a collision choice from earlier messages.
+**@Portable Compression** extract the attached TAR.GZ into the existing project-review folder in the current working folder. Treat this as a new request: do not reuse or infer a collision choice from earlier messages.
 
 Use one self-contained helper invocation for the initial attempt, with no separate listing, directory, checksum, or verification commands. Let the helper validate the archive and reject unsafe paths, links, or unsupported entries.
 
