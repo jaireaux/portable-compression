@@ -6,6 +6,8 @@
 
 I wanted ChatGPT to make a large text file, and I wanted to compress it so it would be easier to store and move around. That’s why I made Portable Compression. It works in ChatGPT Work mode and Codex, safely creates and extracts ZIP and TAR.GZ files, and runs entirely locally without relying on external services.
 
+Try the [sample prompts](docs/sample-prompts.md), from a one-line ZIP request to an extraction workflow with explicit collision choices.
+
 ## Current scope
 
 - Create ZIP archives for broad recipient compatibility.
