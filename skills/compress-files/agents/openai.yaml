@@ -1,0 +1,7 @@
+interface:
+  display_name: "Portable Compression"
+  short_description: "Compress and safely extract ZIP and TAR.GZ archives"
+  default_prompt: "Use $compress-files to create or safely extract a ZIP or TAR.GZ archive."
+
+policy:
+  allow_implicit_invocation: true

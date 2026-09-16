@@ -18,7 +18,15 @@ Try the [sample prompts](docs/sample-prompts.md), from a one-line ZIP request to
 - Avoid overwriting existing outputs unless explicitly authorized.
 - Produce a SHA-256 digest and machine-readable result for every archive.
 
-Version 0.3.0 creates and extracts archives. It does not encrypt archives, accept URLs, or provide an unattended service.
+Version 0.3.1 improves required archive routing and skill discovery; the v0.3.0 archive engine is unchanged. It does not encrypt archives, accept URLs, or provide an unattended service. See the [changelog](CHANGELOG.md).
+
+## Required archive path
+
+Use Portable Compression for every archive creation or extraction operation. Its discovery description covers compress, archive, package, ZIP, TAR.GZ, extract, unpack, and unzip; implicit invocation is explicitly enabled. In Codex, select `$compress-files` from the skill picker (`portable-compression:compress-files` in the catalog). In ChatGPT Work, use **@Portable Compression**.
+
+To make this persistent in Codex, add the rule in [required archive routing](docs/archive-routing.md) to your effective global instructions. Installing the plugin alone does **not** install a global policy, ban other executables, or guarantee correct selection. Unsupported formats and unavailable/failed helpers are blocked unless you explicitly authorize an exception.
+
+Keep only the intended production installation enabled for ordinary work. Use a separate test configuration for candidates; do not enable two installations with the same skill name. See [routing, development isolation, and verification](docs/archive-routing.md).
 
 The pre-1.0 plugin identity uses a navy, cyan, teal, and warm-white archive-and-zipper mark. The composer icon and directory logo are bundled under `assets/`; the color scheme is planned for reconsideration at version 1.0.
 
@@ -104,6 +112,8 @@ An initial Linux attempt had revealed ambiguous helper-location wording and safe
 Portable Compression was conceived and directed by Johnny Rollerfeet and developed with substantial assistance from OpenAI Codex (aka Morgan). Morgan helped design, implement, test, document, and prepare the project for release. Johnny reviewed the project’s decisions and is responsible for the published result.
 
 ## Development time
+
+The v0.3.1 pre-commit checkpoint is recorded in [the release timing record](docs/timing-0.3.1.json). It carries forward the agreed baseline and adds recovered task intervals without double-counting overlapping work. This is tracked AI waiting, not hands-on labor; unrecorded responses in other clients are not silently estimated.
 
 Version 0.2.2 was recorded 22 hours, 9 minutes, 40 seconds after development began on September 1, 2026 at 12:39 PM EDT (79,780 elapsed seconds through 2026-09-02T14:48:40Z). Approximately 60 minutes were spent waiting on AI (3,628 seconds). Both totals are cumulative; AI timing includes explicitly labeled estimates.
 

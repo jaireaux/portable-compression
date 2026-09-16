@@ -1,11 +1,17 @@
 ---
 name: compress-files
-description: Create deterministic ZIP or TAR.GZ archives and safely extract them without relying on OS compression utilities, external packages, or services.
+description: Compress, archive, or package files into ZIP or TAR.GZ; extract, unpack, or unzip archives. Use for every archive creation or extraction request, including implicit requests to bundle files for storage or transfer. Creates deterministic archives and safely extracts them locally without OS archive utilities, Python archive modules, external packages, or network services.
 ---
 
 # Create or extract archives
 
 Use the package-relative `scripts/compress.cjs` helper for archive creation and extraction. It carries its own DEFLATE/GZIP/ZIP implementation and must not be replaced with `zip`, `tar`, `gzip`, 7-Zip, Python archive modules, an external compression package, or a network service.
+
+## Invocation and availability
+
+Implicit invocation is enabled. In Codex, explicitly select `$compress-files` from the skill picker (the catalog identifies it as `portable-compression:compress-files`). In ChatGPT Work, use **@Portable Compression**. Select the intended production installation for ordinary work; development candidates belong in a separate test configuration, not alongside production under the same skill name.
+
+Use this skill for archive operations, not unrelated uses of “package” such as installing a software package. If the skill or its runtime is unavailable, the requested format is unsupported, or the helper fails, stop and report the operation as blocked unless the user explicitly authorizes an exception. Do not silently switch installations or implementations. A user-authorized collision retry remains the workflow below, not an implementation fallback.
 
 ## ChatGPT Work workflow
 

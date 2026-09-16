@@ -1,7 +1,7 @@
 {
   "name": "portable-compression",
-  "version": "0.3.0",
-  "description": "Create and safely extract ZIP and TAR.GZ archives with bundled, OS-independent compression code.",
+  "version": "0.3.1",
+  "description": "Compress, archive, or package files into ZIP or TAR.GZ; extract, unpack, or unzip archives locally with bundled compression code.",
   "author": {
     "name": "rollerfeet.com"
   },
