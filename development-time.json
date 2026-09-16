@@ -515,6 +515,7 @@
     }
   ],
   "continuation": {
+    "superseded_by": "docs/timing-0.3.1.json",
     "after_cutoff": "2026-09-08T20:30:45.947Z",
     "prior_cumulative_ai_waiting_seconds": 5764,
     "method": "Carry only later intervals and active-turn delivery tail into the next checkpoint; do not re-add the 600-second or 180-second estimates. Project age always starts at 2026-09-01T12:39:00-04:00."

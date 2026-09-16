@@ -66,6 +66,17 @@ An explicitly **simulated unavailable-skill** prompt on each host produced a blo
 
 At 18:49 EDT, following Johnny's explicit instruction to remove obsolete installs and publish/install 0.3.1, the supported plugin CLI removed `portable-compression@portable-compression-v030-dev` on Mac and `portable-compression@portable-compression-v030-linux-dev` on LNM, then removed their marketplace registrations. The canonical repository and LNM candidate source folder remain intact; the latter was checked after removal. These generated installations can be recreated from preserved source in isolated test configurations.
 
-The release preflight repeated the complete archive regression suite, routing metadata tests, plugin validator, skill validator, and whitespace checks on Mac: **PASS**. GitHub `main` had no new commits to merge. The published version is 0.3.1 without development cachebuster metadata. Installation and post-publication checks will be recorded after they complete.
+The release preflight repeated the complete archive regression suite, routing metadata tests, plugin validator, skill validator, and whitespace checks on Mac: **PASS**. GitHub `main` had no new commits to merge.
+
+At 18:56 EDT, source commit `60db0450c09c8c7ccb8610609432e945a5e0771d` was published on `main`, tagged `v0.3.1`, and published as the [GitHub release](https://github.com/jaireaux/portable-compression/releases/tag/v0.3.1). This is production 0.3.1 without development cachebuster metadata. The marketplace refresh and plugin-install CLI then installed production 0.3.1 on both hosts:
+
+- Mac: `/Users/jaireaux/.codex/plugins/cache/rollerfeet-plugins/portable-compression/0.3.1`
+- LNM: `/home/jaireaux/.codex/plugins/cache/rollerfeet-plugins/portable-compression/0.3.1`
+
+Verification at 18:58 EDT: **PASS** — both installed manifests, skill documents, invocation-policy files, and helpers match release source byte-for-byte by SHA-256. Both obsolete development-version cache paths are absent, and normal configuration inspection shows only `portable-compression@rollerfeet-plugins` enabled for this plugin. The unchanged helper fingerprint remains the one recorded above. No source folder, user fixture, or credential was removed.
+
+Fresh production smoke tests ran outside the repository using each host's normal Codex home, not an isolated candidate home. Mac completed 18:57–18:58 EDT and LNM completed 18:57–18:58 EDT: **3/3 PASS on each host**. Explicit `$compress-files` ZIP creation, implicit “Unzip” extraction, and implicit colliding “Extract” each read the production 0.3.1 skill and ran its own helper exactly once, with no extra operation commands. Extraction bytes matched the fixture; collisions left them intact and displayed the exact final question. Tests retained workspace-write sandboxing and excluded remote app connectors only for these invocations. This establishes production CLI selection, not native ChatGPT Work behavior.
+
+Temporary production-test evidence: Mac `/private/tmp/portable-compression-production.J7wMU3/results.json`; LNM `/tmp/portable-compression-production.OsYKm9/results.json`. As above, these are working test locations, not agreed permanent retention. Existing desktop/CLI conversations must start fresh to load the changed catalog. The release tag remains pinned to the source release commit; this post-install evidence is a later documentation-only update.
 
 The [release timing checkpoint](timing-0.3.1.json) recovers main-task intervals after the previous v0.2.3 boundary. It does not invent estimates for unrecorded responses in other clients; detailed timing limitations are retained there.
