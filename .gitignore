@@ -1,3 +1,5 @@
 *.tmp-*
 .DS_Store
 .venv/
+# Machine-local Codex runtime configuration; never ship a personal executable path.
+/.codex/config.toml
